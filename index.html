@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Comprehensive 10MVA Substation Electrical System Design Tool with IEEE-based calculations for load flow, fault analysis, grounding, protection coordination, harmonics, and more.">
+  <title>SubStation Designer Pro — 10MVA Substation Design Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- Sidebar Overlay (Mobile) -->
+<div class="sidebar-overlay"></div>
+
+<!-- ============ SIDEBAR ============ -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">
+        <span class="logo-title">SubStation</span>
+        <span class="logo-subtitle">Designer Pro</span>
+      </div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <span class="nav-section-title">Overview</span>
+      <a href="#" class="nav-link active" data-module="dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="#" class="nav-link" data-module="sld"><span class="nav-icon">📋</span> Single Line Diagram</a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">System Studies</span>
+      <a href="#" class="nav-link" data-module="loadflow"><span class="nav-icon">🔄</span> Load Flow (IEEE 3002.2)</a>
+      <a href="#" class="nav-link" data-module="fault"><span class="nav-icon">⚡</span> Fault Analysis (IEEE C37)</a>
+      <a href="#" class="nav-link" data-module="sequence"><span class="nav-icon">🔀</span> Sequence Z (IEEE C37)</a>
+      <a href="#" class="nav-link" data-module="voltagedrop"><span class="nav-icon">📉</span> Voltage Drop (IEEE 141)</a>
+      <a href="#" class="nav-link" data-module="harmonics"><span class="nav-icon">〰️</span> Harmonics (IEEE 519)</a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">Protection</span>
+      <a href="#" class="nav-link" data-module="protection"><span class="nav-icon">🛡️</span> Relay Coord. (IEEE 242)</a>
+      <a href="#" class="nav-link" data-module="differential"><span class="nav-icon">🔁</span> Diff. Protection (IEEE C37.91)</a>
+      <a href="#" class="nav-link" data-module="ctpt"><span class="nav-icon">🔌</span> CT / PT Selection (IEEE C57.13)</a>
+      <a href="#" class="nav-link" data-module="arcflash"><span class="nav-icon">🔥</span> Arc Flash (IEEE 1584)</a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">Equipment</span>
+      <a href="#" class="nav-link" data-module="transformer"><span class="nav-icon">🔲</span> Transformer Sizing (IEEE C57)</a>
+      <a href="#" class="nav-link" data-module="cable"><span class="nav-icon">🔗</span> Cable Sizing (IEC 60287)</a>
+      <a href="#" class="nav-link" data-module="busbar"><span class="nav-icon">📏</span> Bus Bar Sizing (IEEE 605)</a>
+      <a href="#" class="nav-link" data-module="insulation"><span class="nav-icon">🧱</span> Insulation Coord. (IEEE 1313.1)</a>
+      <a href="#" class="nav-link" data-module="grounding"><span class="nav-icon">🌍</span> Grounding (IEEE 80)</a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">Assessment</span>
+      <a href="#" class="nav-link" data-module="forecast"><span class="nav-icon">📈</span> Load Forecast (IEEE 3002.8)</a>
+      <a href="#" class="nav-link" data-module="systemloss"><span class="nav-icon">📊</span> System Loss (Technical)</a>
+      <a href="#" class="nav-link" data-module="reliability"><span class="nav-icon">🎯</span> Reliability (IEEE 1366)</a>
+      <a href="#" class="nav-link" data-module="cost"><span class="nav-icon">💰</span> Cost Estimator (BOQ)</a>
+      <a href="#" class="nav-link" data-module="motorstarting"><span class="nav-icon">🏍️</span> Motor Starting (IEEE 399)</a>
+      <a href="#" class="nav-link" data-module="clearance"><span class="nav-icon">📏</span> Safety Clearances (IEEE 1427)</a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">New Calculations</span>
+      <a href="#" class="nav-link" data-module="battery"><span class="nav-icon">🔋</span> Battery Sizing (IEEE 485)</a>
+      <a href="#" class="nav-link" data-module="shielding"><span class="nav-icon">⛈️</span> Lightning Shielding (IEEE 998)</a>
+      <a href="#" class="nav-link" data-module="filter"><span class="nav-icon">🎛️</span> Harmonic Filter (IEEE 1531)</a>
+      <a href="#" class="nav-link" data-module="dcload"><span class="nav-icon">🔌</span> DC Control Loading (IEEE 485)</a>
+      <a href="#" class="nav-link" data-module="resonance"><span class="nav-icon">📐</span> Busbar Resonance (IEEE 605)</a>
+      <a href="#" class="nav-link" data-module="dga"><span class="nav-icon">🧪</span> DGA Diagnostic (IEEE C57.104)</a>
+      <a href="#" class="nav-link" data-module="capovervoltage"><span class="nav-icon">⚡</span> Capacitor Overvoltage (IEEE C37.99)</a>
+      <a href="#" class="nav-link" data-module="lighting"><span class="nav-icon">💡</span> Substation Lighting (IEEE 111)</a>
+      <a href="#" class="nav-link" data-module="ctsaturation"><span class="nav-icon">🌀</span> CT Saturation (IEEE C37.110)</a>
+      <a href="#" class="nav-link" data-module="sound"><span class="nav-icon">🔊</span> Sound Attenuation (NEMA TR-1)</a>
+      <a href="#" class="nav-link" data-module="insulator"><span class="nav-icon">🛡️</span> Insulator Creepage (IEC 60815)</a>
+      <a href="#" class="nav-link" data-module="acdemand"><span class="nav-icon">💡</span> AC Aux Demand (IEEE 3004.5)</a>
+      <a href="#" class="nav-link" data-module="arrester"><span class="nav-icon">⚡</span> Arrester Energy (IEEE C62.22)</a>
+      <a href="#" class="nav-link" data-module="firebarrier"><span class="nav-icon">🧱</span> Fire Separation (NFPA 850)</a>
+      <a href="#" class="nav-link" data-module="fencegpr"><span class="nav-icon">🚧</span> Fence Touch GPR (IEEE 81)</a>
+      <a href="#" class="nav-link" data-module="gissf6"><span class="nav-icon">💨</span> GIS SF6 Monitor (IEEE C37.122)</a>
+      <a href="#" class="nav-link" data-module="busbardefl"><span class="nav-icon">📏</span> Busbar Deflection (IEEE 605)</a>
+      <a href="#" class="nav-link" data-module="trench"><span class="nav-icon">🕳️</span> Trench Ventilation (IEEE 525)</a>
+      <a href="#" class="nav-link" data-module="ageing"><span class="nav-icon">🌡️</span> Winding Degradation (IEEE C57.91)</a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button id="theme-toggle" class="theme-btn" title="Toggle Dark Mode">🌙</button>
+    <button onclick="App.printReport()" class="sidebar-btn" title="Print Report">🖨️</button>
+    <button onclick="App.exportResults()" class="sidebar-btn" title="Run All Calculations">⚙️</button>
+  </div>
+</aside>
+
+<!-- ============ MAIN CONTENT ============ -->
+<main class="main-content">
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <button id="hamburger-btn" class="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="top-bar-title">
+      <h1>10 MVA Substation Design</h1>
+      <span class="top-bar-subtitle">69kV / 13.2kV — IEEE Compliant Design | <span style="font-size:11.5px; font-weight:900; color:#FF0000;">Engr. Franz Xyrlo I. Tobias, PEE</span></span>
+    </div>
+    <div class="top-bar-actions">
+      <button onclick="App.saveProjectData()" class="btn btn-sm btn-outline">💾 Save</button>
+      <button onclick="App.exportResults()" class="btn btn-sm btn-primary">⚙️ Run All</button>
+    </div>
+  </header>
+
+  <div class="content-area">
+
+    <!-- =========== MODULE: DASHBOARD =========== -->
+    <section id="module-dashboard" class="module-section active">
+      <div class="module-header">
+        <h2>Project Dashboard</h2>
+        <p class="module-desc">10MVA Substation Design Overview — Based on TER by Franz Xyrlo I. Tobias, PEE</p>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-blue">
+          <div class="kpi-icon">⚡</div>
+          <div class="kpi-value" id="dash-mva">10 MVA</div>
+          <div class="kpi-label">Transformer Rating</div>
+        </div>
+        <div class="kpi-card kpi-red">
+          <div class="kpi-icon">🔴</div>
+          <div class="kpi-value" id="dash-hv">69 kV</div>
+          <div class="kpi-label">HV Side</div>
+        </div>
+        <div class="kpi-card kpi-green">
+          <div class="kpi-icon">🔵</div>
+          <div class="kpi-value" id="dash-mv">13.2 kV</div>
+          <div class="kpi-label">MV Side</div>
+        </div>
+        <div class="kpi-card kpi-purple">
+          <div class="kpi-icon">📐</div>
+          <div class="kpi-value" id="dash-impedance">7.5%</div>
+          <div class="kpi-label">Transformer Z%</div>
+        </div>
+        <div class="kpi-card kpi-orange">
+          <div class="kpi-icon">🔥</div>
+          <div class="kpi-value" id="dash-fault">5.84 kA</div>
+          <div class="kpi-label">MV Fault Current</div>
+        </div>
+        <div class="kpi-card kpi-teal">
+          <div class="kpi-icon">⚙️</div>
+          <div class="kpi-value" id="dash-pf">0.95</div>
+          <div class="kpi-label">Power Factor</div>
+        </div>
+        <div class="kpi-card kpi-pink">
+          <div class="kpi-icon">📈</div>
+          <div class="kpi-value" id="dash-hv-current">83.7 A</div>
+          <div class="kpi-label">HV Full Load</div>
+        </div>
+        <div class="kpi-card kpi-indigo">
+          <div class="kpi-icon">📉</div>
+          <div class="kpi-value" id="dash-mv-current">437.4 A</div>
+          <div class="kpi-label">MV Full Load</div>
+        </div>
+      </div>
+
+      <!-- Dashboard Charts Row -->
+      <div class="chart-row">
+        <div class="chart-card">
+          <h3 class="chart-title">24-Hour Load Profile</h3>
+          <div class="chart-container">
+            <canvas id="dash-load-chart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Transformer Loading</h3>
+          <div class="chart-container chart-sm">
+            <canvas id="dash-loading-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project Info -->
+      <div class="info-card">
+        <h3>Project Information</h3>
+        <div class="info-grid">
+          <div class="info-item"><span class="info-label">Project</span><span class="info-value">10 MVA Substation Design</span></div>
+          <div class="info-item"><span class="info-label">Location</span><span class="info-value">Pidigan, Abra, Philippines</span></div>
+          <div class="info-item"><span class="info-label">Utility</span><span class="info-value">NGCP (National Grid Corporation)</span></div>
+          <div class="info-item"><span class="info-label">Standard</span><span class="info-value">IEEE / PEC 2017</span></div>
+          <div class="info-item"><span class="info-label">System</span><span class="info-value">69kV / 13.2kV, 3Φ, 60Hz, Dyn1</span></div>
+          <div class="info-item"><span class="info-label">Engineer</span><span class="info-value">Franz Xyrlo I. Tobias, PEE</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: SINGLE LINE DIAGRAM =========== -->
+    <section id="module-sld" class="module-section">
+      <div class="module-header">
+        <h2>Single Line Diagram</h2>
+        <p class="module-desc">Interactive 10MVA Substation SLD — Click equipment for specifications</p>
+      </div>
+      <div class="card">
+        <div id="sld-container" class="sld-container"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: LOAD FLOW =========== -->
+    <section id="module-loadflow" class="module-section">
+      <div class="module-header">
+        <h2>Load Flow Analysis</h2>
+        <p class="module-desc">Per IEEE 3002.2 — Steady-state power flow using Gauss-Seidel method</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="lf-base-mva">Base MVA</label>
+            <input type="number" id="lf-base-mva" value="10" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="lf-pf">System Power Factor</label>
+            <input type="number" id="lf-pf" value="0.95" step="0.01" min="0" max="1">
+          </div>
+          <div class="form-group">
+            <label for="lf-tolerance">Convergence Tolerance (p.u.)</label>
+            <input type="number" id="lf-tolerance" value="0.0001" step="0.0001">
+          </div>
+          <div class="form-group">
+            <label for="lf-iterations">Max Iterations</label>
+            <input type="number" id="lf-iterations" value="100" step="1">
+          </div>
+        </div>
+
+        <h4 class="section-subtitle">Bus Data</h4>
+        <div class="result-table-wrap">
+          <table class="input-table">
+            <thead>
+              <tr><th>Bus</th><th>Type</th><th>Voltage (kV)</th><th>P Load (MW)</th><th>Q Load (MVAR)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Utility</td><td>Slack</td><td>69</td><td>—</td><td>—</td></tr>
+              <tr><td>HV Bus</td><td>PQ</td><td>69</td><td>0</td><td>0</td></tr>
+              <tr><td>MV Bus</td><td>PQ</td><td>13.2</td><td>8.5</td><td>2.8</td></tr>
+              <tr><td>Feeder 1</td><td>PQ</td><td>13.2</td><td>2.5</td><td>0.73</td></tr>
+              <tr><td>Feeder 2</td><td>PQ</td><td>13.2</td><td>2.8</td><td>0.82</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <button class="btn btn-primary" data-calc="loadflow">🔄 Run Load Flow Analysis</button>
+        <div id="result-loadflow" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: FAULT ANALYSIS =========== -->
+    <section id="module-fault" class="module-section">
+      <div class="module-header">
+        <h2>Short Circuit / Fault Analysis</h2>
+        <p class="module-desc">Per IEEE C37 & IEC 60909 — Per-unit method with symmetrical components</p>
+      </div>
+      <div class="card">
+        <h4 class="section-subtitle">Utility Source Data</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="util-fault-mva">Utility Fault MVA</label>
+            <input type="number" id="util-fault-mva" value="1500" step="10">
+          </div>
+          <div class="form-group">
+            <label for="util-xr">Utility X/R Ratio</label>
+            <input type="number" id="util-xr" value="15" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="util-voltage">Utility Voltage (kV)</label>
+            <input type="number" id="util-voltage" value="69" step="0.1">
+          </div>
+        </div>
+
+        <h4 class="section-subtitle">Transformer Data</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="tf-rating">Rating (MVA)</label>
+            <input type="number" id="tf-rating" value="10" step="0.5">
+          </div>
+          <div class="form-group">
+            <label for="tf-hv">HV Voltage (kV)</label>
+            <input type="number" id="tf-hv" value="69" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="tf-lv">LV Voltage (kV)</label>
+            <input type="number" id="tf-lv" value="13.2" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="tf-impedance">Impedance Z (%)</label>
+            <input type="number" id="tf-impedance" value="7.5" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="tf-xr">X/R Ratio</label>
+            <input type="number" id="tf-xr" value="12" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="tf-nll">No-Load Loss (kW)</label>
+            <input type="number" id="tf-nll" value="12.5" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="tf-ll">Load Loss (kW)</label>
+            <input type="number" id="tf-ll" value="65" step="0.1">
+          </div>
+        </div>
+
+        <button class="btn btn-primary" data-calc="fault">⚡ Run Fault Analysis</button>
+        <div id="result-fault" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: SEQUENCE IMPEDANCE =========== -->
+    <section id="module-sequence" class="module-section">
+      <div class="module-header">
+        <h2>Sequence Impedance Networks</h2>
+        <p class="module-desc">Positive, Negative & Zero Sequence Impedance Calculations</p>
+      </div>
+      <div class="card">
+        <p class="form-note">Uses transformer and utility data from Fault Analysis module.</p>
+        <button class="btn btn-primary" data-calc="sequence">🔀 Calculate Sequence Impedances</button>
+        <div id="result-sequence" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: VOLTAGE DROP =========== -->
+    <section id="module-voltagedrop" class="module-section">
+      <div class="module-header">
+        <h2>Voltage Drop Analysis</h2>
+        <p class="module-desc">Per-section voltage regulation along distribution feeder</p>
+      </div>
+      <div class="card">
+        <h4 class="section-subtitle">Feeder Section Data</h4>
+        <div class="result-table-wrap">
+          <table class="input-table">
+            <thead>
+              <tr><th>From</th><th>To</th><th>Length (km)</th><th>Current (A)</th><th>Conductor</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Substation</td><td>F2001</td><td>1.12</td><td>116</td><td>4/0 AWG ACSR</td></tr>
+              <tr><td>F2001</td><td>F2010</td><td>10.5</td><td>80</td><td>4/0 AWG ACSR</td></tr>
+              <tr><td>F2010</td><td>F2020</td><td>11.7</td><td>50</td><td>#2 AWG ACSR</td></tr>
+              <tr><td>F2020</td><td>F2032</td><td>12.3</td><td>30</td><td>#2 AWG ACSR</td></tr>
+              <tr><td>F2032</td><td>F2051</td><td>15.1</td><td>15</td><td>#4 AWG ACSR</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <button class="btn btn-primary" data-calc="voltagedrop">📉 Calculate Voltage Drop</button>
+
+        <div class="chart-card" style="margin-top:24px">
+          <h3 class="chart-title">Voltage Profile Along Feeder</h3>
+          <div class="chart-container">
+            <canvas id="voltage-profile-chart"></canvas>
+          </div>
+        </div>
+
+        <div id="result-voltagedrop" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: HARMONICS =========== -->
+    <section id="module-harmonics" class="module-section">
+      <div class="module-header">
+        <h2>Harmonics Analysis</h2>
+        <p class="module-desc">Per IEEE 519-2014 — THD, TDD & Compliance Check at PCC</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="harm-isc">Short Circuit Current Isc (A)</label>
+            <input type="number" id="harm-isc" value="5000" step="100">
+          </div>
+          <div class="form-group">
+            <label for="harm-il">Max Demand Load Current IL (A)</label>
+            <input type="number" id="harm-il" value="400" step="10">
+          </div>
+          <div class="form-group">
+            <label for="harm-voltage">System Voltage (kV)</label>
+            <input type="number" id="harm-voltage" value="13.2" step="0.1">
+          </div>
+        </div>
+
+        <h4 class="section-subtitle">Harmonic Content (% of Fundamental)</h4>
+        <div class="form-grid cols-5">
+          <div class="form-group"><label>3rd</label><input type="number" id="harm-h3" value="1.5" step="0.1"></div>
+          <div class="form-group"><label>5th</label><input type="number" id="harm-h5" value="12.0" step="0.1"></div>
+          <div class="form-group"><label>7th</label><input type="number" id="harm-h7" value="8.5" step="0.1"></div>
+          <div class="form-group"><label>11th</label><input type="number" id="harm-h11" value="4.5" step="0.1"></div>
+          <div class="form-group"><label>13th</label><input type="number" id="harm-h13" value="3.0" step="0.1"></div>
+          <div class="form-group"><label>17th</label><input type="number" id="harm-h17" value="2.0" step="0.1"></div>
+          <div class="form-group"><label>19th</label><input type="number" id="harm-h19" value="1.5" step="0.1"></div>
+          <div class="form-group"><label>23rd</label><input type="number" id="harm-h23" value="1.0" step="0.1"></div>
+          <div class="form-group"><label>25th</label><input type="number" id="harm-h25" value="0.8" step="0.1"></div>
+        </div>
+
+        <button class="btn btn-primary" data-calc="harmonics">〰️ Run Harmonics Analysis</button>
+
+        <div class="chart-card" style="margin-top:24px">
+          <h3 class="chart-title">Harmonic Spectrum</h3>
+          <div class="chart-container">
+            <canvas id="harmonics-chart"></canvas>
+          </div>
+        </div>
+
+        <div id="result-harmonics" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: PROTECTION COORDINATION =========== -->
+    <section id="module-protection" class="module-section">
+      <div class="module-header">
+        <h2>Protection Coordination & TCC Curves</h2>
+        <p class="module-desc">Per IEC 60255 / IEEE C37.112 — IDMT Relay Settings & Time-Current Characteristics</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="prot-pickup">Pickup Current (A)</label>
+            <input type="number" id="prot-pickup" value="400" step="10">
+          </div>
+          <div class="form-group">
+            <label for="prot-tms">Time Multiplier Setting (TMS)</label>
+            <input type="number" id="prot-tms" value="0.3" step="0.01" min="0.025" max="1.2">
+          </div>
+          <div class="form-group">
+            <label for="prot-ct-ratio">CT Ratio (Primary)</label>
+            <input type="number" id="prot-ct-ratio" value="400" step="10">
+          </div>
+          <div class="form-group">
+            <label for="prot-curve">Curve Type</label>
+            <select id="prot-curve">
+              <option value="SI">Standard Inverse (SI)</option>
+              <option value="VI">Very Inverse (VI)</option>
+              <option value="EI">Extremely Inverse (EI)</option>
+              <option value="LTI">Long Time Inverse (LTI)</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" data-calc="protection">🛡️ Calculate & Plot TCC Curves</button>
+
+        <!-- TCC Chart -->
+        <div class="chart-card" style="margin-top:24px">
+          <h3 class="chart-title">Time-Current Characteristic (TCC) Curves</h3>
+          <div class="chart-container chart-lg">
+            <canvas id="tcc-chart"></canvas>
+          </div>
+          <div id="tcc-info-box" style="display:none; margin-top:12px;"></div>
+        </div>
+
+        <div id="result-protection" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: DIFFERENTIAL PROTECTION =========== -->
+    <section id="module-differential" class="module-section">
+      <div class="module-header">
+        <h2>Transformer Differential Protection</h2>
+        <p class="module-desc">Per IEEE C37.91 — Percentage Differential Relay Settings</p>
+      </div>
+      <div class="card">
+        <p class="form-note">Uses transformer data from Fault Analysis module. Calculates CT ratios, differential taps, starting ratio, and operating characteristics.</p>
+        <button class="btn btn-primary" data-calc="differential">🔁 Calculate Differential Settings</button>
+        <div id="result-differential" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: CT/PT SELECTION =========== -->
+    <section id="module-ctpt" class="module-section">
+      <div class="module-header">
+        <h2>CT / PT Selection</h2>
+        <p class="module-desc">Per IEEE C57.13 — Current & Potential Transformer Sizing</p>
+      </div>
+      <div class="card">
+        <p class="form-note">Selects appropriate CT ratio, checks burden and accuracy class, verifies knee point voltage and saturation capability for relay-grade CTs.</p>
+        <button class="btn btn-primary" data-calc="ctpt">🔌 Calculate CT/PT Parameters</button>
+        <div id="result-ctpt" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: ARC FLASH =========== -->
+    <section id="module-arcflash" class="module-section">
+      <div class="module-header">
+        <h2>Arc Flash Hazard Analysis</h2>
+        <p class="module-desc">Per IEEE 1584-2018 — Incident Energy & PPE Category</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="af-voltage">System Voltage (kV)</label>
+            <input type="number" id="af-voltage" value="13.2" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="af-fault">Bolted Fault Current (A)</label>
+            <input type="number" id="af-fault" value="5836" step="100">
+          </div>
+          <div class="form-group">
+            <label for="af-time">Clearing Time (s)</label>
+            <input type="number" id="af-time" value="0.5" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="af-distance">Working Distance (mm)</label>
+            <input type="number" id="af-distance" value="910" step="10">
+          </div>
+          <div class="form-group">
+            <label for="af-gap">Gap Between Conductors (mm)</label>
+            <input type="number" id="af-gap" value="153" step="1">
+          </div>
+          <div class="form-group">
+            <label for="af-enclosure">Enclosure Type</label>
+            <select id="af-enclosure">
+              <option value="open">Open Air</option>
+              <option value="box">Box/Enclosure</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="arcflash">🔥 Calculate Arc Flash</button>
+
+        <div class="chart-card" style="margin-top:24px">
+          <h3 class="chart-title">Arc Flash Hazard Zones</h3>
+          <div class="chart-container">
+            <canvas id="arcflash-chart"></canvas>
+          </div>
+        </div>
+
+        <div id="result-arcflash" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: TRANSFORMER SIZING =========== -->
+    <section id="module-transformer" class="module-section">
+      <div class="module-header">
+        <h2>Transformer Sizing & Loading</h2>
+        <p class="module-desc">Per IEEE C57 — Losses, Efficiency & Voltage Regulation</p>
+      </div>
+      <div class="card">
+        <p class="form-note">Uses transformer parameters from Fault Analysis module for sizing, loss calculation, and efficiency analysis.</p>
+        <button class="btn btn-primary" data-calc="transformer">🔲 Calculate Transformer Performance</button>
+        <div id="result-transformer" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: CABLE SIZING =========== -->
+    <section id="module-cable" class="module-section">
+      <div class="module-header">
+        <h2>Cable Sizing</h2>
+        <p class="module-desc">Ampacity, Voltage Drop & Short Circuit Withstand</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="cb-current">Design Current (A)</label>
+            <input type="number" id="cb-current" value="437" step="1">
+          </div>
+          <div class="form-group">
+            <label for="cb-voltage">System Voltage (kV)</label>
+            <input type="number" id="cb-voltage" value="13.2" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="cb-length">Cable Length (km)</label>
+            <input type="number" id="cb-length" value="0.1" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="cb-material">Conductor Material</label>
+            <select id="cb-material">
+              <option value="copper">Copper</option>
+              <option value="aluminum">Aluminum</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="cb-soil-res">Soil Thermal Resistivity (K-m/W)</label>
+            <input type="number" id="cb-soil-res" value="1.2" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="cb-grouping">Grouped Circuits</label>
+            <input type="number" id="cb-grouping" value="2" step="1">
+          </div>
+          <div class="form-group">
+            <label for="cb-depth">Burial Depth (m)</label>
+            <input type="number" id="cb-depth" value="1.0" step="0.1">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="cable">🔗 Size Cable</button>
+        <div id="result-cable" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: BUS BAR =========== -->
+    <section id="module-busbar" class="module-section">
+      <div class="module-header">
+        <h2>Bus Bar Sizing</h2>
+        <p class="module-desc">Current Carrying Capacity, Short Circuit Withstand & Electrodynamic Forces</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="bb-current">Rated Current (A)</label>
+            <input type="number" id="bb-current" value="600" step="10">
+          </div>
+          <div class="form-group">
+            <label for="bb-fault">Fault Current (A)</label>
+            <input type="number" id="bb-fault" value="25000" step="100">
+          </div>
+          <div class="form-group">
+            <label for="bb-material">Material</label>
+            <select id="bb-material">
+              <option value="copper">Copper</option>
+              <option value="aluminum">Aluminum</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="bb-width">Bar Width (mm)</label>
+            <input type="number" id="bb-width" value="50" step="5">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="busbar">📏 Size Bus Bar</button>
+        <div id="result-busbar" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: INSULATION COORDINATION =========== -->
+    <section id="module-insulation" class="module-section">
+      <div class="module-header">
+        <h2>Insulation Coordination</h2>
+        <p class="module-desc">BIL Selection, Surge Arrester Sizing & Protection Margin</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="ins-voltage">System Voltage (kV)</label>
+            <input type="number" id="ins-voltage" value="13.2" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="ins-bil">Equipment BIL (kV)</label>
+            <input type="number" id="ins-bil" value="110" step="5">
+          </div>
+          <div class="form-group">
+            <label for="ins-arrester">Arrester Rating (kV)</label>
+            <input type="number" id="ins-arrester" value="10.2" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="ins-altitude">Altitude (m above sea level)</label>
+            <input type="number" id="ins-altitude" value="100" step="50">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="insulation">🧱 Calculate Insulation Coordination</button>
+        <div id="result-insulation" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: GROUNDING =========== -->
+    <section id="module-grounding" class="module-section">
+      <div class="module-header">
+        <h2>Grounding System Design</h2>
+        <p class="module-desc">Per IEEE Std 80 — Step & Touch Voltage, Grid Resistance, GPR</p>
+      </div>
+      <div class="card">
+        <h4 class="section-subtitle">Site & Soil Data</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="gnd-soil-resistivity">Soil Resistivity ρ (Ω·m)</label>
+            <input type="number" id="gnd-soil-resistivity" value="100" step="10">
+          </div>
+          <div class="form-group">
+            <label for="gnd-surface-resistivity">Surface Layer ρs (Ω·m)</label>
+            <input type="number" id="gnd-surface-resistivity" value="3000" step="100">
+          </div>
+          <div class="form-group">
+            <label for="gnd-surface-thickness">Surface Thickness hs (m)</label>
+            <input type="number" id="gnd-surface-thickness" value="0.15" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="gnd-fault-duration">Fault Duration ts (s)</label>
+            <input type="number" id="gnd-fault-duration" value="0.5" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="gnd-soil-resistivity-lower">Lower Layer Soil Resistivity (Ohm-m)</label>
+            <input type="number" id="gnd-soil-resistivity-lower" value="500" step="10">
+          </div>
+          <div class="form-group">
+            <label for="gnd-soil-thickness">Upper Layer Thickness (m)</label>
+            <input type="number" id="gnd-soil-thickness" value="1.0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="gnd-body-weight">Body Weight</label>
+            <select id="gnd-body-weight">
+              <option value="50" selected>50kg</option>
+              <option value="70">70kg</option>
+            </select>
+          </div>
+        </div>
+
+        <h4 class="section-subtitle">Grid Geometry</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="gnd-grid-length">Grid Length (m)</label>
+            <input type="number" id="gnd-grid-length" value="40" step="1">
+          </div>
+          <div class="form-group">
+            <label for="gnd-grid-width">Grid Width (m)</label>
+            <input type="number" id="gnd-grid-width" value="30" step="1">
+          </div>
+          <div class="form-group">
+            <label for="gnd-mesh-spacingx">Mesh Spacing X (m)</label>
+            <input type="number" id="gnd-mesh-spacingx" value="5" step="0.5">
+          </div>
+          <div class="form-group">
+            <label for="gnd-mesh-spacingy">Mesh Spacing Y (m)</label>
+            <input type="number" id="gnd-mesh-spacingy" value="5" step="0.5">
+          </div>
+          <div class="form-group">
+            <label for="gnd-conductor-depth">Conductor Depth h (m)</label>
+            <input type="number" id="gnd-conductor-depth" value="0.6" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="gnd-conductor-diameter">Conductor Diameter d (m)</label>
+            <input type="number" id="gnd-conductor-diameter" value="0.01" step="0.001">
+          </div>
+        </div>
+
+        <h4 class="section-subtitle">Ground Rods & Current</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="gnd-num-ground-rods">Number of Ground Rods</label>
+            <input type="number" id="gnd-num-ground-rods" value="20" step="1">
+          </div>
+          <div class="form-group">
+            <label for="gnd-rod-length">Rod Length (m)</label>
+            <input type="number" id="gnd-rod-length" value="3" step="0.5">
+          </div>
+          <div class="form-group">
+            <label for="gnd-grid-current">Maximum Grid Current IG (A)</label>
+            <input type="number" id="gnd-grid-current" value="3000" step="100">
+          </div>
+        </div>
+
+        <button class="btn btn-primary" data-calc="grounding">🌍 Run IEEE 80 Grounding Design</button>
+
+        <!-- Grounding Grid Visualization -->
+        <div class="chart-card" style="margin-top:24px">
+          <h3 class="chart-title">Grounding Grid Layout</h3>
+          <div class="chart-container">
+            <canvas id="grounding-grid-chart"></canvas>
+          </div>
+        </div>
+
+        <div id="result-grounding" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: LOAD FORECASTING =========== -->
+    <section id="module-forecast" class="module-section">
+      <div class="module-header">
+        <h2>Load Forecasting</h2>
+        <p class="module-desc">Compound Growth Rate & Linear Regression Analysis</p>
+      </div>
+      <div class="card">
+        <h4 class="section-subtitle">Historical Demand Data (kW)</h4>
+        <div class="result-table-wrap">
+          <table class="input-table">
+            <thead>
+              <tr><th>Year</th><th>Peak Demand (kW)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2014</td><td>5,200</td></tr>
+              <tr><td>2015</td><td>5,450</td></tr>
+              <tr><td>2016</td><td>5,720</td></tr>
+              <tr><td>2017</td><td>6,010</td></tr>
+              <tr><td>2018</td><td>6,320</td></tr>
+              <tr><td>2019</td><td>6,580</td></tr>
+              <tr><td>2020</td><td>6,750</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <button class="btn btn-primary" data-calc="forecast">📈 Generate Forecast</button>
+
+        <div class="chart-card" style="margin-top:24px">
+          <h3 class="chart-title">Load Growth Forecast</h3>
+          <div class="chart-container">
+            <canvas id="forecast-chart"></canvas>
+          </div>
+        </div>
+
+        <div id="result-forecast" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: SYSTEM LOSS =========== -->
+    <section id="module-systemloss" class="module-section">
+      <div class="module-header">
+        <h2>System Loss Assessment</h2>
+        <p class="module-desc">Technical Loss Calculation — I²R Losses per Feeder</p>
+      </div>
+      <div class="card">
+        <p class="form-note">Calculates transformer and feeder line losses to determine overall system efficiency.</p>
+        <button class="btn btn-primary" data-calc="systemloss">📊 Calculate System Losses</button>
+
+        <div class="chart-card" style="margin-top:24px">
+          <h3 class="chart-title">System Loss Breakdown</h3>
+          <div class="chart-container chart-sm">
+            <canvas id="systemloss-chart"></canvas>
+          </div>
+        </div>
+
+        <div id="result-systemloss" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: RELIABILITY =========== -->
+    <section id="module-reliability" class="module-section">
+      <div class="module-header">
+        <h2>Reliability Assessment</h2>
+        <p class="module-desc">Per IEEE 1366 — SAIFI, SAIDI, CAIDI, ENS & Availability Indices</p>
+      </div>
+      <div class="card">
+        <p class="form-note">Predictive reliability analysis using failure rate and repair time data for all major components.</p>
+        <button class="btn btn-primary" data-calc="reliability">🎯 Calculate Reliability Indices</button>
+
+        <div class="chart-card" style="margin-top:24px">
+          <h3 class="chart-title">Reliability Performance</h3>
+          <div class="chart-container">
+            <canvas id="reliability-chart"></canvas>
+          </div>
+        </div>
+
+        <div id="result-reliability" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: COST ESTIMATOR =========== -->
+    <section id="module-cost" class="module-section">
+      <div class="module-header">
+        <h2>Project Cost Estimator</h2>
+        <p class="module-desc">Bill of Quantities & Equipment Cost Breakdown</p>
+      </div>
+      <div class="card">
+        <p class="form-note">Generates approximate cost estimate based on typical Philippine substation construction costs.</p>
+        <button class="btn btn-primary" data-calc="cost">💰 Generate Cost Estimate</button>
+        <div id="result-cost" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: MOTOR STARTING (IEEE 399) =========== -->
+    <section id="module-motorstarting" class="module-section">
+      <div class="module-header">
+        <h2>Motor Starting Analysis</h2>
+        <p class="module-desc">IEEE 399 Motor Starting Transient Voltage Drop</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="ms-motor-hp">Motor HP</label>
+            <input type="number" id="ms-motor-hp" value="1000" step="50">
+          </div>
+          <div class="form-group">
+            <label for="ms-lrc-multiplier">LRC Multiplier</label>
+            <input type="number" id="ms-lrc-multiplier" value="6.0" step="0.5">
+          </div>
+          <div class="form-group">
+            <label for="ms-efficiency">Efficiency</label>
+            <input type="number" id="ms-efficiency" value="0.95" step="0.01" min="0.5" max="1.0">
+          </div>
+          <div class="form-group">
+            <label for="ms-power-factor">Power Factor</label>
+            <input type="number" id="ms-power-factor" value="0.2" step="0.05" min="0.0" max="1.0">
+          </div>
+          <div class="form-group">
+            <label for="ms-bus-fault-mva">Bus Short Circuit Capacity MVA</label>
+            <input type="number" id="ms-bus-fault-mva" value="250" step="10">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="motorstarting">🏍️ Run Motor Starting Analysis</button>
+        <div id="result-motorstarting" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: SAFETY CLEARANCES (IEEE 1427) =========== -->
+    <section id="module-clearance" class="module-section">
+      <div class="module-header">
+        <h2>Electrical Safety Clearances</h2>
+        <p class="module-desc">IEEE 1427 Clearance Compliance Checklist</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="sc-voltage">Voltage (kV)</label>
+            <select id="sc-voltage">
+              <option value="13.2" selected>13.2 kV</option>
+              <option value="69">69 kV</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="sc-phase-to-phase">Phase-to-Phase Spacing (mm)</label>
+            <input type="number" id="sc-phase-to-phase" value="200" step="10">
+          </div>
+          <div class="form-group">
+            <label for="sc-phase-to-ground">Phase-to-Ground Spacing (mm)</label>
+            <input type="number" id="sc-phase-to-ground" value="150" step="10">
+          </div>
+          <div class="form-group">
+            <label for="sc-fence-height">Fence Height (mm)</label>
+            <input type="number" id="sc-fence-height" value="2400" step="50">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="clearance">📏 Run Clearance Checklist</button>
+        <div id="result-clearance" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: BATTERY SIZING =========== -->
+    <section id="module-battery" class="module-section">
+      <div class="module-header">
+        <h2>Battery Sizing</h2>
+        <p class="module-desc">IEEE 485 Station Battery Sizing Calculations</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="bat-continuous">Continuous Load (A)</label>
+            <input type="number" id="bat-continuous" value="15" step="1">
+          </div>
+          <div class="form-group">
+            <label for="bat-momentary">Momentary Load (A)</label>
+            <input type="number" id="bat-momentary" value="80" step="5">
+          </div>
+          <div class="form-group">
+            <label for="bat-duration">Duration (Hours)</label>
+            <input type="number" id="bat-duration" value="8" step="0.5">
+          </div>
+          <div class="form-group">
+            <label for="bat-temp">Temperature Correction Factor</label>
+            <input type="number" id="bat-temp" value="1.11" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="bat-margin">Design Margin</label>
+            <input type="number" id="bat-margin" value="1.15" step="0.01">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="battery">🔋 Size Battery</button>
+        <div id="result-battery" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: LIGHTNING SHIELDING =========== -->
+    <section id="module-shielding" class="module-section">
+      <div class="module-header">
+        <h2>Lightning Shielding</h2>
+        <p class="module-desc">IEEE 998 Lightning Shielding Protection (Electrogeometric Model)</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="ls-mast">Mast Height (m)</label>
+            <input type="number" id="ls-mast" value="18" step="1">
+          </div>
+          <div class="form-group">
+            <label for="ls-radius">Rolling Sphere Radius (m)</label>
+            <input type="number" id="ls-radius" value="45" step="5">
+          </div>
+          <div class="form-group">
+            <label for="ls-equipment">Equipment Height (m)</label>
+            <input type="number" id="ls-equipment" value="6" step="0.5">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="shielding">⛈️ Calculate Shielding</button>
+        <div id="result-shielding" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: HARMONIC FILTER SIZING =========== -->
+    <section id="module-filter" class="module-section">
+      <div class="module-header">
+        <h2>Harmonic Filter Sizing</h2>
+        <p class="module-desc">IEEE 1531 Shunt Power Harmonic Filter Sizing</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="hf-power">Fundamental Reactive Power (kVAR)</label>
+            <input type="number" id="hf-power" value="500" step="50">
+          </div>
+          <div class="form-group">
+            <label for="hf-order">Tuning Order</label>
+            <input type="number" id="hf-order" value="4.7" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="hf-voltage">System Voltage (kV)</label>
+            <input type="number" id="hf-voltage" value="13.2" step="0.1">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="filter">🎛️ Size Harmonic Filter</button>
+        <div id="result-filter" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: DC CONTROL LOADING =========== -->
+    <section id="module-dcload" class="module-section">
+      <div class="module-header">
+        <h2>DC Control Loading</h2>
+        <p class="module-desc">IEEE 485 DC Control System Load Current Analysis</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="dc-base">Base Load Power (W)</label>
+            <input type="number" id="dc-base" value="800" step="50">
+          </div>
+          <div class="form-group">
+            <label for="dc-indicators">Indicator Count</label>
+            <input type="number" id="dc-indicators" value="150" step="10">
+          </div>
+          <div class="form-group">
+            <label for="dc-voltage">DC Voltage (V)</label>
+            <input type="number" id="dc-voltage" value="125" step="5">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="dcload">🔌 Calculate DC Loading</button>
+        <div id="result-dcload" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: BUSBAR RESONANCE =========== -->
+    <section id="module-resonance" class="module-section">
+      <div class="module-header">
+        <h2>Busbar Resonance</h2>
+        <p class="module-desc">IEEE 605 Rigid Busbar Mechanical Resonance Analysis</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="br-spacing">Busbar Spacing (mm)</label>
+            <input type="number" id="br-spacing" value="300" step="50">
+          </div>
+          <div class="form-group">
+            <label for="br-span">Busbar Span Length (mm)</label>
+            <input type="number" id="br-span" value="1200" step="100">
+          </div>
+          <div class="form-group">
+            <label for="br-mass">Busbar Mass (kg/m)</label>
+            <input type="number" id="br-mass" value="1.2" step="0.1">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="resonance">📐 Calculate Busbar Resonance</button>
+        <div id="result-resonance" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: DGA DIAGNOSTIC =========== -->
+    <section id="module-dga" class="module-section">
+      <div class="module-header">
+        <h2>DGA Diagnostic</h2>
+        <p class="module-desc">IEEE C57.104 Dissolved Gas Analysis (DGA) Diagnostic</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="dga-ch4">Methane (CH4) (ppm)</label>
+            <input type="number" id="dga-ch4" value="50" step="5">
+          </div>
+          <div class="form-group">
+            <label for="dga-c2h6">Ethane (C2H6) (ppm)</label>
+            <input type="number" id="dga-c2h6" value="35" step="5">
+          </div>
+          <div class="form-group">
+            <label for="dga-c2h4">Ethylene (C2H4) (ppm)</label>
+            <input type="number" id="dga-c2h4" value="120" step="10">
+          </div>
+          <div class="form-group">
+            <label for="dga-c2h2">Acetylene (C2H2) (ppm)</label>
+            <input type="number" id="dga-c2h2" value="12" step="1">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="dga">🧪 Run DGA Diagnostic</button>
+        <div id="result-dga" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: CAPACITOR OVERVOLTAGE =========== -->
+    <section id="module-capovervoltage" class="module-section">
+      <div class="module-header">
+        <h2>Capacitor Overvoltage</h2>
+        <p class="module-desc">IEEE C37.99 Shunt Capacitor Switching Overvoltage Analysis</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="co-bank">Capacitor Bank Size (kVAR)</label>
+            <input type="number" id="co-bank" value="1200" step="100">
+          </div>
+          <div class="form-group">
+            <label for="co-fault">Source Short Circuit Level (MVA)</label>
+            <input type="number" id="co-fault" value="250" step="10">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="capovervoltage">⚡ Calculate Capacitor Overvoltage</button>
+        <div id="result-capovervoltage" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: SUBSTATION LIGHTING =========== -->
+    <section id="module-lighting" class="module-section">
+      <div class="module-header">
+        <h2>Substation Lighting</h2>
+        <p class="module-desc">IEEE 111 Substation Outdoor Yard Lighting Design</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="lt-area">Yard Area (m²)</label>
+            <input type="number" id="lt-area" value="1200" step="100">
+          </div>
+          <div class="form-group">
+            <label for="lt-lux">Target Illuminance (Lux)</label>
+            <input type="number" id="lt-lux" value="20" step="5">
+          </div>
+          <div class="form-group">
+            <label for="lt-lumens">Fixture Lumens (lm)</label>
+            <input type="number" id="lt-lumens" value="12000" step="1000">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="lighting">💡 Calculate Lighting</button>
+        <div id="result-lighting" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: CT SATURATION MARGIN =========== -->
+    <section id="module-ctsaturation" class="module-section">
+      <div class="module-header">
+        <h2>CT Saturation Margin</h2>
+        <p class="module-desc">IEEE C37.110 Instrument CT Saturation Margin Assessment</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="ct-burden">Total Burden Resistance (Ω)</label>
+            <input type="number" id="ct-burden" value="2.0" step="0.5">
+          </div>
+          <div class="form-group">
+            <label for="ct-fault">Fault Current (A)</label>
+            <input type="number" id="ct-fault" value="5836" step="100">
+          </div>
+          <div class="form-group">
+            <label for="ct-ratio">CT Ratio (Turns)</label>
+            <input type="number" id="ct-ratio" value="100" step="10">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="ctsaturation">🌀 Check CT Saturation Margin</button>
+        <div id="result-ctsaturation" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: TRANSFORMER SOUND ATTENUATION =========== -->
+    <section id="module-sound" class="module-section">
+      <div class="module-header">
+        <h2>Transformer Sound Attenuation</h2>
+        <p class="module-desc">NEMA TR-1 / IEEE C57.12.90 Transformer Sound Attenuation</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="sa-mva">Transformer Rating (MVA)</label>
+            <input type="number" id="sa-mva" value="10" step="1">
+          </div>
+          <div class="form-group">
+            <label for="sa-db">Base Sound Level (dB)</label>
+            <input type="number" id="sa-db" value="62" step="1">
+          </div>
+          <div class="form-group">
+            <label for="sa-dist">Distance from Transformer (m)</label>
+            <input type="number" id="sa-dist" value="15" step="1">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="sound">🔊 Calculate Sound Attenuation</button>
+        <div id="result-sound" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: INSULATOR CREEPAGE SIZING =========== -->
+    <section id="module-insulator" class="module-section">
+      <div class="module-header">
+        <h2>Insulator Creepage Sizing</h2>
+        <p class="module-desc">IEC 60815 Insulator Creepage Sizing Sizing</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="ins-pollution">Pollution Level</label>
+            <select id="ins-pollution">
+              <option value="light">Light</option>
+              <option value="medium">Medium</option>
+              <option value="heavy" selected>Heavy</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="ins-voltage">System Voltage (kV)</label>
+            <input type="number" id="ins-voltage" value="69" step="1">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="insulator">🛡️ Calculate Insulator Creepage</button>
+        <div id="result-insulator" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: AC AUXILIARY POWER DEMAND =========== -->
+    <section id="module-acdemand" class="module-section">
+      <div class="module-header">
+        <h2>AC Auxiliary Power Demand</h2>
+        <p class="module-desc">IEEE 3004.5 AC Auxiliary Power Sizing</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="ac-heating">Heating Load (W)</label>
+            <input type="number" id="ac-heating" value="1500" step="100">
+          </div>
+          <div class="form-group">
+            <label for="ac-cooling">Cooling Load (kW)</label>
+            <input type="number" id="ac-cooling" value="3" step="0.5">
+          </div>
+          <div class="form-group">
+            <label for="ac-lighting">Lighting Load (W)</label>
+            <input type="number" id="ac-lighting" value="2000" step="100">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="acdemand">💡 Calculate AC Aux Demand</button>
+        <div id="result-acdemand" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: SURGE ARRESTER ENERGY =========== -->
+    <section id="module-arrester" class="module-section">
+      <div class="module-header">
+        <h2>Surge Arrester Energy</h2>
+        <p class="module-desc">IEEE C62.22 Surge Arrester Energy Sizing</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="sa-current">Discharge Current (kA)</label>
+            <input type="number" id="sa-current" value="10" step="1">
+          </div>
+          <div class="form-group">
+            <label for="sa-voltage">Arrester Discharge Voltage (kV)</label>
+            <input type="number" id="sa-voltage" value="150" step="10">
+          </div>
+          <div class="form-group">
+            <label for="sa-duration">Discharge Duration (μs)</label>
+            <input type="number" id="sa-duration" value="2000" step="100">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="arrester">⚡ Calculate Surge Arrester Energy</button>
+        <div id="result-arrester" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: FIRE SEPARATION BARRIER =========== -->
+    <section id="module-firebarrier" class="module-section">
+      <div class="module-header">
+        <h2>Fire Separation Barrier</h2>
+        <p class="module-desc">NFPA 850 Transformer Fire Separation Sizing</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="fb-oil">Transformer Oil Volume (Liters)</label>
+            <input type="number" id="fb-oil" value="12000" step="500">
+          </div>
+          <div class="form-group">
+            <label for="fb-mva">Transformer Rating (MVA)</label>
+            <input type="number" id="fb-mva" value="10" step="1">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="firebarrier">🧱 Calculate Fire Separation</button>
+        <div id="result-firebarrier" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: FENCING GPR VOLTAGE GRADIENT =========== -->
+    <section id="module-fencegpr" class="module-section">
+      <div class="module-header">
+        <h2>Fencing GPR Voltage Gradient</h2>
+        <p class="module-desc">IEEE 81 Substation Fencing GPR Touch Voltage</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="fg-gpr">Ground Potential Rise (V)</label>
+            <input type="number" id="fg-gpr" value="2500" step="100">
+          </div>
+          <div class="form-group">
+            <label for="fg-dist">Distance to Outer Fence boundary (m)</label>
+            <input type="number" id="fg-dist" value="2" step="0.5">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="fencegpr">🚧 Calculate Fence Touch GPR</button>
+        <div id="result-fencegpr" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: GIS SF6 PRESSURE MONITORING =========== -->
+    <section id="module-gissf6" class="module-section">
+      <div class="module-header">
+        <h2>GIS SF6 Pressure Monitoring</h2>
+        <p class="module-desc">IEEE C37.122 GIS SF6 Density & Temp Correction</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="gis-temp">SF6 Temperature (°C)</label>
+            <input type="number" id="gis-temp" value="25" step="1">
+          </div>
+          <div class="form-group">
+            <label for="gis-pres">SF6 Measured Pressure (bar)</label>
+            <input type="number" id="gis-pres" value="5.0" step="0.1">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="gissf6">💨 Monitor GIS SF6</button>
+        <div id="result-gissf6" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: RIGID BUSBAR SHORT-CIRCUIT DEFLECTION =========== -->
+    <section id="module-busbardefl" class="module-section">
+      <div class="module-header">
+        <h2>Rigid Busbar Short-Circuit Deflection</h2>
+        <p class="module-desc">IEEE 605 Rigid Busbar Deflection Analysis</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="bd-span">Span Length (mm)</label>
+            <input type="number" id="bd-span" value="1200" step="50">
+          </div>
+          <div class="form-group">
+            <label for="bd-force">Electromagnetic Force (N/m)</label>
+            <input type="number" id="bd-force" value="500" step="10">
+          </div>
+          <div class="form-group">
+            <label for="bd-modulus">Modulus of Elasticity E (GPa)</label>
+            <input type="number" id="bd-modulus" value="70000" step="1000">
+          </div>
+          <div class="form-group">
+            <label for="bd-inertia">Moment of Inertia I (mm⁴)</label>
+            <input type="number" id="bd-inertia" value="115000" step="1000">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="busbardefl">📏 Calculate Busbar Deflection</button>
+        <div id="result-busbardefl" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: CABLE TRENCH FILL & VENTILATION =========== -->
+    <section id="module-trench" class="module-section">
+      <div class="module-header">
+        <h2>Cable Trench Fill & Ventilation</h2>
+        <p class="module-desc">IEEE 525 Cable Trench Fill Ratio Sizing</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="tr-cables">Total Cables (Qty)</label>
+            <input type="number" id="tr-cables" value="12" step="1">
+          </div>
+          <div class="form-group">
+            <label for="tr-diameter">Cable Outer Diameter (mm)</label>
+            <input type="number" id="tr-diameter" value="40" step="1">
+          </div>
+          <div class="form-group">
+            <label for="tr-width">Trench Width (mm)</label>
+            <input type="number" id="tr-width" value="800" step="50">
+          </div>
+          <div class="form-group">
+            <label for="tr-depth">Trench Depth (mm)</label>
+            <input type="number" id="tr-depth" value="1000" step="50">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="trench">🕳️ Calculate Trench Ventilation</button>
+        <div id="result-trench" class="result-area"></div>
+      </div>
+    </section>
+
+    <!-- =========== MODULE: TRANSFORMER WINDING DEGRADATION =========== -->
+    <section id="module-ageing" class="module-section">
+      <div class="module-header">
+        <h2>Transformer Winding Degradation</h2>
+        <p class="module-desc">IEEE C57.91 Transformer Insulation Degradation Sizing</p>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="ag-hotspot">Winding Hot-Spot Temp (°C)</label>
+            <input type="number" id="ag-hotspot" value="115" step="1">
+          </div>
+          <div class="form-group">
+            <label for="ag-factor">Equivalent Load Factor (pu)</label>
+            <input type="number" id="ag-factor" value="1.0" step="0.05">
+          </div>
+        </div>
+        <button class="btn btn-primary" data-calc="ageing">🌡️ Calculate Winding Degradation</button>
+        <div id="result-ageing" class="result-area"></div>
+      </div>
+    </section>
+
+  </div><!-- .content-area -->
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p>SubStation Designer Pro v1.0 — Based on TER by Franz Xyrlo I. Tobias, REE/PEE</p>
+    <p>IEEE 80 · IEEE 519 · IEEE 1584 · IEEE C37 · IEEE C57 · IEC 60255 · IEC 60909 · PEC 2017</p>
+  </footer>
+</main>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<script src="calculations.js"></script>
+<script src="charts.js"></script>
+<script src="sld.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
