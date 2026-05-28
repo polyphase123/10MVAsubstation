@@ -903,15 +903,29 @@ window.SubstationCalc = (function () {
 
     return {
       summary: {
-        title: 'IEEE C57.13 Instrument CT Class Accuracy Analysis',
+        title: 'IEEE C57.13 Instrument CT & PT Equipment Selection',
         status: terminalVoltage < allowableVoltage ? 'success' : 'danger',
-        statusText: terminalVoltage < allowableVoltage ? 'CT Protection Saturation Safe' : 'CT SATURATION WARNING!'
+        statusText: terminalVoltage < allowableVoltage ? 'CT/PT Equipment Optimized' : 'CT SATURATION WARNING!'
       },
       keyResults: [
         { label: 'Secondary Voltage at Max Fault', value: num(terminalVoltage, 1), unit: 'V' },
         { label: 'CT Accuracy Voltage Rating', value: `${ctClass}`, unit: 'V' }
       ],
       steps: [
+        {
+          title: '69kV High Voltage Equipment Recommendations',
+          formula: 'Specific CT & PT Hardware Sizing',
+          substitution: '69kV Line Sizing',
+          result: 'CT: 100:5A, Accuracy Class C800 (IEEE C57.13 compliant for high voltage relaying). PT: 69,000V/115V, Accuracy Class 0.3WXYZ (3-phase wye connection for high-precision metering and line protection). Relays: SEL-487E for transformer differential protection and SEL-311C for backup line distance protection.',
+          reference: 'IEEE C57.13'
+        },
+        {
+          title: '13.2kV Medium Voltage Equipment Recommendations',
+          formula: 'Specific CT & PT Hardware Sizing',
+          substitution: '13.2kV Bus & Feeders',
+          result: 'CT: 600:5A, Accuracy Class C800 for Main Incomer; 400:5A, Accuracy Class C400 for Feeder lines (verifies zero saturation at max MV bolted fault of 5,836A). PT: 13,200V/115V, Accuracy Class 0.3WXYZ. Relays: SEL-751 or SEL-351S for overcurrent, sensitive earth fault, and recloser control.',
+          reference: 'IEEE C57.13'
+        },
         {
           title: 'Saturation Voltage Verification',
           formula: 'V_terminal = I_sec_fault * Z_secondary_total',
@@ -943,6 +957,13 @@ window.SubstationCalc = (function () {
         { label: 'LV Nominal Current', value: num(lvI, 1), unit: 'A' }
       ],
       steps: [
+        {
+          title: 'Differential Protection Relay Selection (87T)',
+          formula: 'Primary & Backup Protection Hardware',
+          substitution: 'Power Transformer T1 Sizing',
+          result: 'Primary Relay: SEL-487E Transformer Differential and Overcurrent Relay (provides biased differential protection 87T, restricted earth fault 87N, and thermal tracking 49). Backup Relay: SEL-751 or SEL-351S for overcurrent protection (50/51/50N/51N) on primary delta and secondary wye.',
+          reference: 'IEEE C37.91'
+        },
         {
           title: 'Differential CT Current Balance & Phase Correction',
           formula: 'I_diff = |I_hv_sec - I_lv_sec|',
@@ -1175,14 +1196,14 @@ window.SubstationCalc = (function () {
     const grandTotalPHP = grandTotal * exchangeRate;
 
     const lines_boq = [
-      ['69kV Power Transformer (10MVA)', '1 Unit', '450,000', '450,000', num(450000 * exchangeRate, 0)],
-      ['69kV SF6 Circuit Breaker', '1 Unit', '75,000', '75,000', num(75000 * exchangeRate, 0)],
-      ['13.2kV Vacuum Feeder Breakers', feeders + ' Units', '18,000', num(18000 * feeders, 0), num(18000 * feeders * exchangeRate, 0)],
-      ['Grounding Copper Mesh & Rods', '1 Lot', '35,000', '35,000', num(35000 * exchangeRate, 0)],
-      ['Instrument CTs & PTs', '1 Lot', '24,000', '24,000', num(24000 * exchangeRate, 0)],
-      ['Protection Panel & Relays', '1 Lot', '40,000', '40,000', num(40000 * exchangeRate, 0)],
-      ['Civil Engineering & Concrete Pads', '1 Lot', '80,000', '80,000', num(80000 * exchangeRate, 0)],
-      ['Installation & Commissioning', '1 Lot', '65,000', '65,000', num(65000 * exchangeRate, 0)]
+      ['69kV Power Transformer (10MVA) - Hitachi Energy / MR OLTC', '1 Unit', '450,000', '450,000', num(450000 * exchangeRate, 0)],
+      ['69kV SF6 Live-Tank Circuit Breaker - Siemens 3AP1DT-72.5', '1 Unit', '75,000', '75,000', num(75000 * exchangeRate, 0)],
+      ['13.2kV Vacuum Feeder Breakers - Eaton VCP-W 15kV', feeders + ' Units', '18,000', num(18000 * feeders, 0), num(18000 * feeders * exchangeRate, 0)],
+      ['Grounding Copper Mesh & Rods - nVent ERICO / Cadweld', '1 Lot', '35,000', '35,000', num(35000 * exchangeRate, 0)],
+      ['Instrument CTs & PTs - Ritz Instrument Transformers', '1 Lot', '24,000', '24,000', num(24000 * exchangeRate, 0)],
+      ['Protection Panel & Relays - SEL-487E & SEL-751 (Schweitzer)', '1 Lot', '40,000', '40,000', num(40000 * exchangeRate, 0)],
+      ['Civil Engineering & Concrete Pads - Holcim / CEMEX', '1 Lot', '80,000', '80,000', num(80000 * exchangeRate, 0)],
+      ['Installation & Commissioning - Local PEE Accredited Contractor', '1 Lot', '65,000', '65,000', num(65000 * exchangeRate, 0)]
     ];
 
     return {

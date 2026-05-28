@@ -21,7 +21,7 @@ window.App = (function () {
   const DEFAULTS = {
     project: {
       name: '10 MVA Substation Design',
-      location: 'Pidigan, Abra',
+      location: 'Abra',
       engineer: 'Franz Xyrlo I. Tobias, PEE',
       date: new Date().toLocaleDateString(),
       standard: 'IEEE / PEC 2017',
@@ -191,6 +191,16 @@ window.App = (function () {
             label: 'Feeder 2',
             mw: [1.8, 1.7, 1.6, 1.6, 1.7, 1.9, 2.2, 2.5, 2.8, 3.0, 3.1, 3.1, 3.0, 2.9, 2.7, 2.5, 2.4, 2.3, 2.6, 2.8, 2.7, 2.5, 2.2, 1.9],
             mvar: [0.59, 0.56, 0.53, 0.53, 0.56, 0.63, 0.72, 0.82, 0.92, 0.99, 1.02, 1.02, 0.99, 0.95, 0.89, 0.82, 0.79, 0.76, 0.86, 0.92, 0.89, 0.82, 0.72, 0.63],
+          },
+          {
+            label: 'Feeder 3',
+            mw: [1.5, 1.4, 1.3, 1.3, 1.4, 1.5, 1.7, 1.9, 2.0, 2.1, 2.2, 2.2, 2.1, 2.0, 1.9, 1.8, 1.7, 1.6, 1.8, 2.0, 1.9, 1.8, 1.6, 1.4],
+            mvar: [0.49, 0.46, 0.43, 0.43, 0.46, 0.49, 0.56, 0.63, 0.66, 0.69, 0.72, 0.72, 0.69, 0.66, 0.63, 0.59, 0.56, 0.53, 0.59, 0.66, 0.63, 0.59, 0.53, 0.46],
+          },
+          {
+            label: 'Feeder 4',
+            mw: [1.3, 1.2, 1.1, 1.1, 1.2, 1.3, 1.5, 1.7, 1.8, 1.9, 2.0, 2.0, 1.9, 1.8, 1.7, 1.6, 1.5, 1.4, 1.6, 1.8, 1.7, 1.6, 1.4, 1.2],
+            mvar: [0.43, 0.40, 0.36, 0.36, 0.40, 0.43, 0.49, 0.56, 0.59, 0.63, 0.66, 0.66, 0.63, 0.59, 0.56, 0.53, 0.49, 0.46, 0.53, 0.59, 0.56, 0.53, 0.46, 0.40],
           },
         ],
       });
@@ -449,9 +459,11 @@ window.App = (function () {
       buses: [
         { name: 'Utility', voltage: 69, type: 'slack', pGen: 0, qGen: 0 },
         { name: 'HV Bus', voltage: 69, type: 'PQ', pLoad: 0, qLoad: 0 },
-        { name: 'MV Bus', voltage: 13.2, type: 'PQ', pLoad: 8.5, qLoad: 2.8 },
+        { name: 'MV Bus', voltage: 13.2, type: 'PQ', pLoad: 9.5, qLoad: 2.79 },
         { name: 'Feeder 1', voltage: 13.2, type: 'PQ', pLoad: 2.5, qLoad: 0.73 },
         { name: 'Feeder 2', voltage: 13.2, type: 'PQ', pLoad: 2.8, qLoad: 0.82 },
+        { name: 'Feeder 3', voltage: 13.2, type: 'PQ', pLoad: 2.2, qLoad: 0.65 },
+        { name: 'Feeder 4', voltage: 13.2, type: 'PQ', pLoad: 2.0, qLoad: 0.59 }
       ],
       baseMVA: getInputNum('tf-rating') || 10,
       lines: [
@@ -459,6 +471,8 @@ window.App = (function () {
         { from: 1, to: 2, r: 0.005, x: 0.075 },
         { from: 2, to: 3, r: 0.02, x: 0.04 },
         { from: 2, to: 4, r: 0.025, x: 0.05 },
+        { from: 2, to: 5, r: 0.022, x: 0.045 },
+        { from: 2, to: 6, r: 0.024, x: 0.048 }
       ],
     });
   }
