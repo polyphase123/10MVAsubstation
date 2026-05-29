@@ -541,10 +541,10 @@ window.SubstationSLD = (function () {
     const feederSpacing = (busRight - busLeft) / (feederCount + 1);
 
     const feederData = [
-      { label: 'F1', area: 'Bangued, Peñarrubia', load: '2.5 MW', relay: 'SEL-351' },
-      { label: 'F2', area: 'San Isidro', load: '2.8 MW', relay: 'SEL-351' },
-      { label: 'F3', area: 'Dolores, Lagangilang', load: '2.2 MW', relay: 'SEL-351' },
-      { label: 'F4', area: 'Tayum, Bucay', load: '2.5 MW', relay: 'SEL-351' },
+      { label: 'F1', area: 'Bangued, Peñarrubia', load: '2.5 MW', relay: 'SEL-351', configuration: '10-Bus Radial Line' },
+      { label: 'F2', area: 'San Isidro', load: '2.8 MW', relay: 'SEL-351', configuration: '10-Bus Radial Line' },
+      { label: 'F3', area: 'Dolores, Lagangilang', load: '2.2 MW', relay: 'SEL-351', configuration: '10-Bus Radial Line' },
+      { label: 'F4', area: 'Tayum, Bucay', load: '2.5 MW', relay: 'SEL-351', configuration: '10-Bus Radial Line' },
     ];
 
     feederData.forEach((fd, i) => {
@@ -558,6 +558,7 @@ window.SubstationSLD = (function () {
         peakLoad: fd.load,
         protectionRelay: fd.relay,
         recloserType: '3-phase electronic',
+        networkStructure: '10-Bus Radial Distribution Line',
       });
     });
 

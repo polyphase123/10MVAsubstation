@@ -155,8 +155,8 @@ window.SubstationCalc = (function () {
     // Realistic Newton-Raphson formulation
     // Initialize voltages to 1.0 pu / 0.0 rad (except slack, which is fixed at 1.0 / 0.0)
     const N = buses.length;
-    const V = new Array(N).fill(1.0);
-    const theta = new Array(N).fill(0.0);
+    let V = new Array(N).fill(1.0);
+    let theta = new Array(N).fill(0.0);
 
     // Slack bus is index 0
     // Build admittance matrix Ybus
@@ -184,30 +184,72 @@ window.SubstationCalc = (function () {
       B[t][f] -= b;
     });
 
-    // Run 3 mock Newton-Raphson iterations to show calculation convergence path and final values
-    let iter = 3;
-    for (let it = 0; it < iter; it++) {
-      // Calculate mismatch vectors and Jacobian elements
+    // Gauss-Seidel Complex Solver for exact convergence on radial systems
+    const V_complex = Array.from({ length: N }, () => ({ re: 1.0, im: 0.0 }));
+
+    const max_iter = 100;
+    const tolerance = 1e-6;
+    let iterCount = 0;
+    
+    for (let it = 0; it < max_iter; it++) {
+      iterCount++;
+      let max_diff = 0;
       for (let i = 1; i < N; i++) {
-        let p_calc = 0;
-        let q_calc = 0;
+        // P and Q in per-unit
+        const p = ((buses[i].pGen || 0) - (buses[i].pLoad || 0)) / Sb;
+        const q = ((buses[i].qGen || 0) - (buses[i].qLoad || 0)) / Sb;
+        
+        const S_conj = { re: p, im: -q };
+        const V_i = V_complex[i];
+        const V_i_conj = { re: V_i.re, im: -V_i.im };
+        const V_i_conj_sq = V_i_conj.re * V_i_conj.re + V_i_conj.im * V_i_conj.im;
+        
+        const term1 = {
+          re: (S_conj.re * V_i_conj.re + S_conj.im * V_i_conj.im) / V_i_conj_sq,
+          im: (S_conj.im * V_i_conj.re - S_conj.re * V_i_conj.im) / V_i_conj_sq
+        };
+        
+        let sum_Y_V = { re: 0, im: 0 };
         for (let j = 0; j < N; j++) {
-          const t_diff = theta[i] - theta[j];
-          p_calc += V[i] * V[j] * (G[i][j] * Math.cos(t_diff) + B[i][j] * Math.sin(t_diff));
-          q_calc += V[i] * V[j] * (G[i][j] * Math.sin(t_diff) - B[i][j] * Math.cos(t_diff));
+          if (j !== i) {
+            const Y_re = G[i][j];
+            const Y_im = B[i][j];
+            const V_j = V_complex[j];
+            
+            sum_Y_V.re += Y_re * V_j.re - Y_im * V_j.im;
+            sum_Y_V.im += Y_re * V_j.im + Y_im * V_j.re;
+          }
         }
-        const p_target = (buses[i].pGen || 0) - (buses[i].pLoad || 0);
-        const q_target = (buses[i].qGen || 0) - (buses[i].qLoad || 0);
-
-        const dP = p_target - p_calc;
-        const dQ = q_target - q_calc;
-
-        // Apply structured Newton-Raphson delta voltage update model
-        // Voltage and angle corrections calculated via standard Jacobian elements
-        theta[i] += dP * 0.1;
-        V[i] += dQ * 0.1;
+        
+        const num_val = {
+          re: term1.re - sum_Y_V.re,
+          im: term1.im - sum_Y_V.im
+        };
+        
+        const Y_ii_re = G[i][i];
+        const Y_ii_im = B[i][i];
+        const Y_ii_sq = Y_ii_re * Y_ii_re + Y_ii_im * Y_ii_im;
+        
+        const V_new = {
+          re: (num_val.re * Y_ii_re + num_val.im * Y_ii_im) / Y_ii_sq,
+          im: (num_val.im * Y_ii_re - num_val.re * Y_ii_im) / Y_ii_sq
+        };
+        
+        const diff = Math.sqrt(Math.pow(V_new.re - V_i.re, 2) + Math.pow(V_new.im - V_i.im, 2));
+        if (diff > max_diff) {
+          max_diff = diff;
+        }
+        
+        V_complex[i] = V_new;
+      }
+      
+      if (max_diff < tolerance) {
+        break;
       }
     }
+
+    V = V_complex.map(vc => Math.sqrt(vc.re * vc.re + vc.im * vc.im));
+    theta = V_complex.map(vc => Math.atan2(vc.im, vc.re));
 
     const results = buses.map((bus, idx) => {
       const pLoadVal = bus.pLoad || 0;
@@ -254,16 +296,16 @@ window.SubstationCalc = (function () {
 
     return {
       summary: {
-        title: 'IEEE 3002.2 Newton-Raphson Load Flow Analysis',
+        title: 'IEEE 3002.2 Gauss-Seidel Load Flow Analysis',
         status: 'success',
-        statusText: 'Converged in 3 iterations'
+        statusText: `Converged in ${iterCount} iterations`
       },
       keyResults: [
         { label: 'Total System Load', value: num(totalS, 2), unit: 'MVA' },
         { label: 'Active Power Demand', value: num(totalP, 2), unit: 'MW' },
         { label: 'Reactive Power Demand', value: num(totalQ, 2), unit: 'MVAR' },
         { label: 'System Active Losses', value: num(totalLossP * 1000, 1), unit: 'kW' },
-        { label: 'Minimum Voltage', value: num(results[results.length - 1].vMag, 4), unit: 'pu' },
+        { label: 'Minimum Voltage', value: num(Math.min(...V), 4), unit: 'pu' },
         { label: 'Transformer Loading', value: num(loadingPct, 1), unit: '%' }
       ],
       steps: [
@@ -275,18 +317,18 @@ window.SubstationCalc = (function () {
           reference: 'IEEE 3002.2 Section 5'
         },
         {
-          title: 'Step 2: Formulate Newton-Raphson Jacobian',
-          formula: 'J = [[H, N], [M, L]] where H = dP/dTheta, N = dP/dV, M = dQ/dTheta, L = dQ/dV',
-          substitution: 'Formulating sparse matrices for active and reactive mismatches',
-          result: 'Jacobian elements calculated successfully',
+          title: 'Step 2: Formulate Nodal Admittance Matrix (Ybus)',
+          formula: 'Y_ii = sum(y_ik), Y_ij = -y_ij',
+          substitution: 'Formulating complex G and B conductance/susceptance matrices',
+          result: 'Sparse admittance matrix constructed successfully',
           reference: 'IEEE 3002.2 Chapter 6'
         },
         {
-          title: 'Step 3: Solve Power Flow Updates',
-          formula: '[[dTheta], [dV]] = J^-1 * [[dP], [dQ]]',
-          substitution: 'Solved iterative mismatches and updated nodal voltage profiles',
-          result: `Voltage magnitude minimum: ${num(results[results.length - 1].vMag, 4)} pu`,
-          reference: 'IEEE 3002.2 Section 6.5'
+          title: 'Step 3: Solve Nodal Complex Voltage Updates (Gauss-Seidel)',
+          formula: 'V_i^(k+1) = (1 / Y_ii) * [ (P_i - j*Q_i)/V_i^(k)* - sum_{j!=i} Y_ij * V_j ]',
+          substitution: `Executed sparse complex matrix updates over ${iterCount} iterations`,
+          result: `System converged below 1e-6 tolerance. Min voltage: ${num(Math.min(...V), 4)} pu`,
+          reference: 'IEEE 3002.2 Section 6.4'
         }
       ],
       table: {

@@ -691,17 +691,58 @@
   function createVoltageProfile(canvasId, data) {
     applyGlobalDefaults();
     const ctx = getCanvas(canvasId).getContext('2d');
-    const buses = data.buses || [];
-    const labels = buses.map(b => b.name);
-    const voltages = buses.map(b => b.voltage_pu);
     const upper = data.upperLimit || 1.05;
     const lower = data.lowerLimit || 0.95;
 
-    const barColors = voltages.map(v => {
-      if (v > upper || v < lower) return COLORS.danger;
-      if (v > upper - 0.01 || v < lower + 0.01) return COLORS.warning;
-      return COLORS.secondary;
-    });
+    let datasets = [];
+    let labels = [];
+    let allVoltages = [];
+
+    if (data.feeders) {
+      labels = ['Substation', 'Bus 1', 'Bus 2', 'Bus 3', 'Bus 4', 'Bus 5', 'Bus 6', 'Bus 7', 'Bus 8', 'Bus 9', 'Bus 10'];
+      data.feeders.forEach((feeder, idx) => {
+        const voltages = feeder.buses.map(b => b.voltage_pu);
+        allVoltages = allVoltages.concat(voltages);
+        const color = COLORS.series[idx % COLORS.series.length];
+        datasets.push({
+          label: feeder.label || `Feeder ${idx + 1}`,
+          data: voltages,
+          borderColor: color,
+          backgroundColor: hexToRgba(color, 0.05),
+          borderWidth: 2.5,
+          fill: false,
+          tension: 0.2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        });
+      });
+    } else {
+      const buses = data.buses || [];
+      labels = buses.map(b => b.name);
+      const voltages = buses.map(b => b.voltage_pu);
+      allVoltages = voltages;
+      const barColors = voltages.map(v => {
+        if (v > upper || v < lower) return COLORS.danger;
+        if (v > upper - 0.01 || v < lower + 0.01) return COLORS.warning;
+        return COLORS.secondary;
+      });
+      datasets.push({
+        label: 'Voltage (p.u.)',
+        data: voltages,
+        borderColor: COLORS.primary,
+        backgroundColor: hexToRgba(COLORS.primary, 0.10),
+        borderWidth: 2.5,
+        fill: false,
+        tension: 0.2,
+        pointRadius: 5,
+        pointBackgroundColor: barColors,
+        pointBorderColor: barColors,
+        pointHoverRadius: 8,
+      });
+    }
+
+    const minV = Math.min(...allVoltages);
+    const maxV = Math.max(...allVoltages);
 
     // Limit band plugin
     const limitBandPlugin = {
@@ -746,19 +787,7 @@
       type: 'line',
       data: {
         labels,
-        datasets: [{
-          label: 'Voltage (p.u.)',
-          data: voltages,
-          borderColor: COLORS.primary,
-          backgroundColor: hexToRgba(COLORS.primary, 0.10),
-          borderWidth: 2.5,
-          fill: false,
-          tension: 0.2,
-          pointRadius: 5,
-          pointBackgroundColor: barColors,
-          pointBorderColor: barColors,
-          pointHoverRadius: 8,
-        }],
+        datasets,
       },
       options: {
         plugins: {
@@ -770,20 +799,20 @@
           },
           tooltip: {
             callbacks: {
-              label: (ctx) => `${ctx.parsed.y.toFixed(4)} p.u. (${(ctx.parsed.y * (data.nominalVoltage_kV || 1)).toFixed(3)} kV)`,
+              label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(4)} p.u. (${(ctx.parsed.y * (data.nominalVoltage_kV || 1)).toFixed(3)} kV)`,
             },
           },
         },
         scales: {
           x: {
-            title: { display: true, text: 'Bus', font: { size: 13, weight: '600' } },
+            title: { display: true, text: 'Bus Segment', font: { size: 13, weight: '600' } },
             grid: { color: COLORS.gridLine },
           },
           y: {
             title: { display: true, text: 'Voltage (p.u.)', font: { size: 13, weight: '600' } },
             grid: { color: COLORS.gridLine },
-            min: Math.min(lower - 0.03, Math.min(...voltages) - 0.02),
-            max: Math.max(upper + 0.03, Math.max(...voltages) + 0.02),
+            min: Math.min(lower - 0.03, minV - 0.02),
+            max: Math.max(upper + 0.03, maxV + 0.02),
           },
         },
       },

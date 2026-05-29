@@ -455,25 +455,51 @@ window.App = (function () {
   }
 
   function runLoadFlowCalc() {
+    const baseMVA = getInputNum('lf-base-mva') || getInputNum('tf-rating') || 10;
+    const buses = [
+      { name: 'Utility', voltage: 69, type: 'slack', pGen: 0, qGen: 0 },
+      { name: 'HV Bus', voltage: 69, type: 'PQ', pLoad: 0, qLoad: 0 },
+      { name: 'MV Bus', voltage: 13.2, type: 'PQ', pLoad: 0, qLoad: 0 }
+    ];
+    const lines = [
+      { from: 0, to: 1, r: 0.001, x: 0.01 },
+      { from: 1, to: 2, r: 0.005, x: 0.075 }
+    ];
+
+    const feederLoads = [
+      { p: 2.5, q: 0.73 }, // Feeder 1
+      { p: 2.8, q: 0.82 }, // Feeder 2
+      { p: 2.2, q: 0.65 }, // Feeder 3
+      { p: 2.0, q: 0.59 }  // Feeder 4
+    ];
+
+    let busIdx = 3;
+    for (let f = 0; f < 4; f++) {
+      const pPerBus = feederLoads[f].p / 10;
+      const qPerBus = feederLoads[f].q / 10;
+      for (let b = 1; b <= 10; b++) {
+        buses.push({
+          name: `Feeder ${f + 1} Bus ${b}`,
+          voltage: 13.2,
+          type: 'PQ',
+          pLoad: Number(pPerBus.toFixed(3)),
+          qLoad: Number(qPerBus.toFixed(3))
+        });
+
+        // Radial connections
+        if (b === 1) {
+          lines.push({ from: 2, to: busIdx, r: 0.004, x: 0.008 });
+        } else {
+          lines.push({ from: busIdx - 1, to: busIdx, r: 0.003, x: 0.006 });
+        }
+        busIdx++;
+      }
+    }
+
     return SubstationCalc.loadFlow({
-      buses: [
-        { name: 'Utility', voltage: 69, type: 'slack', pGen: 0, qGen: 0 },
-        { name: 'HV Bus', voltage: 69, type: 'PQ', pLoad: 0, qLoad: 0 },
-        { name: 'MV Bus', voltage: 13.2, type: 'PQ', pLoad: 9.5, qLoad: 2.79 },
-        { name: 'Feeder 1', voltage: 13.2, type: 'PQ', pLoad: 2.5, qLoad: 0.73 },
-        { name: 'Feeder 2', voltage: 13.2, type: 'PQ', pLoad: 2.8, qLoad: 0.82 },
-        { name: 'Feeder 3', voltage: 13.2, type: 'PQ', pLoad: 2.2, qLoad: 0.65 },
-        { name: 'Feeder 4', voltage: 13.2, type: 'PQ', pLoad: 2.0, qLoad: 0.59 }
-      ],
-      baseMVA: getInputNum('tf-rating') || 10,
-      lines: [
-        { from: 0, to: 1, r: 0.001, x: 0.01 },
-        { from: 1, to: 2, r: 0.005, x: 0.075 },
-        { from: 2, to: 3, r: 0.02, x: 0.04 },
-        { from: 2, to: 4, r: 0.025, x: 0.05 },
-        { from: 2, to: 5, r: 0.022, x: 0.045 },
-        { from: 2, to: 6, r: 0.024, x: 0.048 }
-      ],
+      buses,
+      lines,
+      baseMVA
     });
   }
 
@@ -842,32 +868,59 @@ window.App = (function () {
   }
 
   function runVoltageDropCalc() {
+    const feederParams = [
+      { name: 'Feeder 1', current: 116, conductor: '4/0 AWG ACSR', r: 0.328, x: 0.408 },
+      { name: 'Feeder 2', current: 100, conductor: '4/0 AWG ACSR', r: 0.328, x: 0.408 },
+      { name: 'Feeder 3', current: 95, conductor: '#2 AWG ACSR', r: 0.826, x: 0.441 },
+      { name: 'Feeder 4', current: 105, conductor: '4/0 AWG ACSR', r: 0.328, x: 0.408 },
+    ];
+
+    const sections = [];
+    feederParams.forEach(f => {
+      let current = f.current;
+      for (let b = 1; b <= 10; b++) {
+        const segmentCurrent = current * (1 - (b - 1) * 0.08); 
+        sections.push({
+          from: b === 1 ? 'Substation' : `${f.name} Bus ${b - 1}`,
+          to: `${f.name} Bus ${b}`,
+          length: 1.5,
+          current: Number(segmentCurrent.toFixed(1)),
+          conductor: f.conductor,
+          r: f.r,
+          x: f.x
+        });
+      }
+    });
+
     const result = SubstationCalc.voltageDrop({
-      sections: [
-        { from: 'Substation', to: 'F2001', length: 1.12, current: 116, conductor: '4/0 AWG ACSR', r: 0.328, x: 0.408 },
-        { from: 'F2001', to: 'F2010', length: 10.5, current: 80, conductor: '4/0 AWG ACSR', r: 0.328, x: 0.408 },
-        { from: 'F2010', to: 'F2020', length: 11.7, current: 50, conductor: '#2 AWG ACSR', r: 0.826, x: 0.441 },
-        { from: 'F2020', to: 'F2032', length: 12.3, current: 30, conductor: '#2 AWG ACSR', r: 0.826, x: 0.441 },
-        { from: 'F2032', to: 'F2051', length: 15.1, current: 15, conductor: '#4 AWG ACSR', r: 1.315, x: 0.456 },
-      ],
+      sections: sections,
       baseVoltage: 13.2,
       powerFactor: 0.95,
     });
 
     if (typeof SubstationCharts !== 'undefined') {
       try {
-        const buses = [{ name: 'Substation', voltage_pu: 1.0 }];
-        let cumDrop = 0;
-        result.table.rows.forEach(row => {
-          const toNode = row[0];
-          const drop = parseFloat(row[4]) || 0;
-          cumDrop += drop;
-          buses.push({ name: toNode, voltage_pu: 1.0 - cumDrop / 100 });
-        });
+        const feeders = [];
+        for (let f = 1; f <= 4; f++) {
+          const buses = [{ name: 'Substation', voltage_pu: 1.0 }];
+          let cumDrop = 0;
+          result.table.rows.forEach(row => {
+            const toNode = row[0];
+            if (toNode.startsWith(`Feeder ${f}`)) {
+              const drop = parseFloat(row[4]) || 0;
+              cumDrop += drop;
+              buses.push({ name: toNode, voltage_pu: 1.0 - cumDrop / 100 });
+            }
+          });
+          feeders.push({
+            label: `Feeder ${f}`,
+            buses: buses
+          });
+        }
 
         destroyChart('voltage-profile-chart');
         chartInstances['voltage-profile-chart'] = SubstationCharts.createVoltageProfile('voltage-profile-chart', {
-          buses: buses,
+          feeders: feeders,
           nominalVoltage_kV: 13.2,
           upperLimit: 1.05,
           lowerLimit: 0.95
