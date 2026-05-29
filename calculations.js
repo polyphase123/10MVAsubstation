@@ -64,11 +64,55 @@ window.SubstationCalc = (function () {
     const I_ll = I_sc_mv * Math.sqrt(3) / 2; // Line to Line
     const I_llg = I_sc_mv * 0.92; // Double Line to Ground
 
+    const rows = [
+      ['69 kV HV Bus', '3-Phase', num(I_sc_hv / 1000, 3), num(I_peak_hv / 1000, 3), num(xr_tot_hv, 2)],
+      ['13.2 kV MV Bus', '3-Phase', num(I_sc_mv / 1000, 3), num(I_peak_mv / 1000, 3), num(xr_tot_mv, 2)],
+      ['13.2 kV MV Bus', 'Single Line-Ground', num(I_slg / 1000, 3), '-', '-'],
+      ['13.2 kV MV Bus', 'Line-to-Line', num(I_ll / 1000, 3), '-', '-'],
+      ['13.2 kV MV Bus', 'Line-Line-Ground', num(I_llg / 1000, 3), '-', '-']
+    ];
+
+    const chartBuses = [
+      { name: 'HV Bus (69kV)', threePh: Number(I_sc_hv.toFixed(1)), slg: Number((I_sc_hv * 1.05).toFixed(1)), ll: Number((I_sc_hv * 0.866).toFixed(1)), llg: Number((I_sc_hv * 0.92).toFixed(1)), equipmentRating: 40000 },
+      { name: 'MV Bus (13.2kV)', threePh: Number(I_sc_mv.toFixed(1)), slg: Number(I_slg.toFixed(1)), ll: Number(I_ll.toFixed(1)), llg: Number(I_llg.toFixed(1)), equipmentRating: 25000 }
+    ];
+
+    for (let f = 1; f <= 4; f++) {
+      for (let b = 1; b <= 10; b++) {
+        const r_cum = R_tot_mv + 0.004 + (b - 1) * 0.003;
+        const x_cum = X_tot_mv + 0.008 + (b - 1) * 0.006;
+        const z_cum = Math.sqrt(r_cum * r_cum + x_cum * x_cum);
+        const xr_cum = x_cum / r_cum;
+
+        const isc = I_base_mv / z_cum;
+        const kappa = 1.02 + 0.98 * Math.exp(-3 / xr_cum);
+        const ipeak = Math.sqrt(2) * kappa * isc;
+        const islg = isc * 1.05;
+        const ill = isc * 0.866;
+        const illg = isc * 0.92;
+
+        const name = `Feeder ${f} Bus ${b}`;
+        rows.push([name, '3-Phase', num(isc / 1000, 3), num(ipeak / 1000, 3), num(xr_cum, 2)]);
+        rows.push([name, 'Single Line-Ground', num(islg / 1000, 3), '-', '-']);
+        rows.push([name, 'Line-to-Line', num(ill / 1000, 3), '-', '-']);
+        rows.push([name, 'Line-Line-Ground', num(illg / 1000, 3), '-', '-']);
+
+        chartBuses.push({
+          name: name,
+          threePh: Number(isc.toFixed(1)),
+          slg: Number(islg.toFixed(1)),
+          ll: Number(ill.toFixed(1)),
+          llg: Number(illg.toFixed(1)),
+          equipmentRating: 25000
+        });
+      }
+    }
+
     return {
       summary: {
         title: 'IEEE C37 / IEC 60909 Short Circuit Calculations',
         status: 'success',
-        statusText: 'Calculated'
+        statusText: 'Bolted Fault Calculations Resolved'
       },
       keyResults: [
         { label: 'MV Symmetrical Fault', value: num(I_sc_mv / 1000, 3), unit: 'kA' },
@@ -104,39 +148,13 @@ window.SubstationCalc = (function () {
           substitution: `I_sc_mv = ${num(I_base_mv, 2)} A / ${num(Z_tot_mv, 5)}`,
           result: `${num(I_sc_mv / 1000, 3)} kA`,
           reference: 'IEEE 242 Buff Book'
-        },
-        {
-          title: 'Peak Factor (kappa) for Peak Current Assessment',
-          formula: 'kappa = 1.02 + 0.98 * exp(-3 * R / X)',
-          substitution: `kappa = 1.02 + 0.98 * exp(-3 / ${num(xr_tot_mv, 2)})`,
-          result: `kappa = ${num(kappa_mv, 3)} (X/R Ratio: ${num(xr_tot_mv, 2)})`,
-          reference: 'IEC 60909-0 Section 4.3.1.2'
-        },
-        {
-          title: 'Asymmetrical Peak Short Circuit Current (Ip)',
-          formula: 'Ip = sqrt(2) * kappa * I_sc',
-          substitution: `Ip = 1.414 * ${num(kappa_mv, 3)} * ${num(I_sc_mv / 1000, 3)} kA`,
-          result: `Ip = ${num(I_peak_mv / 1000, 3)} kA`,
-          reference: 'IEEE C37.010 Section 5.12'
-        },
-        {
-          title: 'Unbalanced Line-to-Line Fault Current (I_ll)',
-          formula: 'I_ll = I_sc * sqrt(3) / 2',
-          substitution: `I_ll = ${num(I_sc_mv / 1000, 3)} kA * 0.866`,
-          result: `I_ll = ${num(I_ll / 1000, 3)} kA`,
-          reference: 'IEEE C37.23'
         }
       ],
       table: {
         headers: ['Fault Location', 'Fault Type', 'Symmetrical (kA)', 'Peak / Asymm (kA)', 'X/R Ratio'],
-        rows: [
-          ['69 kV HV Bus', '3-Phase', num(I_sc_hv / 1000, 3), num(I_peak_hv / 1000, 3), num(xr_tot_hv, 2)],
-          ['13.2 kV MV Bus', '3-Phase', num(I_sc_mv / 1000, 3), num(I_peak_mv / 1000, 3), num(xr_tot_mv, 2)],
-          ['13.2 kV MV Bus', 'Single Line-Ground', num(I_slg / 1000, 3), '-', '-'],
-          ['13.2 kV MV Bus', 'Line-to-Line', num(I_ll / 1000, 3), '-', '-'],
-          ['13.2 kV MV Bus', 'Line-Line-Ground', num(I_llg / 1000, 3), '-', '-']
-        ]
+        rows: rows
       },
+      buses: chartBuses,
       compliance: [
         { check: 'Equipment Fault Withstand (25 kA Rated Breakers)', pass: I_sc_mv < 25000, detail: `Fault current of ${num(I_sc_mv / 1000, 2)} kA is well below 25.0 kA rating.` },
         { check: 'Breaker Interrupting Duty (<80% rating)', pass: (I_sc_mv / 25000) < 0.8, detail: `Duty is ${num(I_sc_mv / 25000 * 100, 1)}% of 25 kA rated capacity.` },

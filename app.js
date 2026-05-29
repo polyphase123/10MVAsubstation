@@ -451,7 +451,21 @@ window.App = (function () {
       utilityFaultMVA: getInputNum('util-fault-mva'),
       utilityXR: getInputNum('util-xr'),
     };
-    return SubstationCalc.faultAnalysis(params);
+    const result = SubstationCalc.faultAnalysis(params);
+
+    if (typeof SubstationCharts !== 'undefined') {
+      try {
+        destroyChart('fault-chart');
+        chartInstances['fault-chart'] = SubstationCharts.createFaultCurrentChart('fault-chart', {
+          buses: result.buses,
+          title: 'Bolted Fault Current Profiles (A)'
+        });
+      } catch (e) {
+        console.warn('Fault current chart error:', e);
+      }
+    }
+
+    return result;
   }
 
   function runLoadFlowCalc() {
