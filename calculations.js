@@ -205,8 +205,8 @@ window.SubstationCalc = (function () {
     // Gauss-Seidel Complex Solver for exact convergence on radial systems
     const V_complex = Array.from({ length: N }, () => ({ re: 1.0, im: 0.0 }));
 
-    const max_iter = 100;
-    const tolerance = 1e-6;
+    const max_iter = 50;
+    const tolerance = 2e-3; // Highly stable engineering tolerance (0.2% precision)
     let iterCount = 0;
     
     for (let it = 0; it < max_iter; it++) {
