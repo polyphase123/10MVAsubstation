@@ -1278,11 +1278,58 @@ window.App = (function () {
   function displayResult(container, result, type) {
     let html = '';
 
+    const standardsMapping = {
+      fault: 'IEEE 399 / IEEE 551',
+      loadflow: 'IEEE 399 (Brown Book)',
+      grounding: 'IEEE Std 80-2013',
+      protection: 'IEEE C37.112 / IEC 60255',
+      harmonics: 'IEEE 519-2014',
+      transformer: 'IEEE C57.91 / C57.12.00',
+      arcflash: 'IEEE 1584-2018 / NFPA 70E',
+      cable: 'IEC 60287 / Neher-McGrath',
+      insulation: 'IEEE C62.22 / C62.11',
+      reliability: 'IEEE 493 (Gold Book)',
+      ctpt: 'IEEE C57.13 Standard',
+      differential: 'IEEE C37.91 Guide',
+      busbar: 'IEEE Standard 605',
+      voltagedrop: 'IEEE 141 / IEEE C57.15',
+      systemloss: 'Utility Technical Standard',
+      forecast: 'IEEE Std 739',
+      sequence: 'IEEE 399 Symmetrical Components',
+      cost: 'AACE Class 3 Estimate',
+      motorstarting: 'IEEE 399 / NEMA MG-1',
+      clearance: 'IEEE 1427 / NESC Standards',
+      battery: 'IEEE Std 485 Sizing Rule',
+      shielding: 'IEEE Std 998 Shielding',
+      filter: 'IEEE 519 Harmonic Tuning',
+      dcload: 'IEEE 485 Control Loading',
+      resonance: 'IEEE 605 Bus Resonance',
+      dga: 'IEEE C57.104 DGA Diagnostic',
+      capovervoltage: 'IEEE C37.99 / IEEE C37.012',
+      lighting: 'IESNA RP-7 Substation Lighting',
+      ctsaturation: 'IEEE C57.13 Saturation Margin',
+      sound: 'IEEE C57.12.90 Sound Attenuation',
+      insulator: 'IEC 60815 Creepage standard',
+      acdemand: 'IEEE Std 141 Auxiliary Demand',
+      arrester: 'IEEE C62.22 / PSCAD ATP Solver',
+      firebarrier: 'NFPA 850 Separation Guide',
+      fencegpr: 'IEEE Std 80 perimeter safety',
+      gissf6: 'IEC 62271-203 GIS standard',
+      busbardefl: 'IEEE Standard 605 Deflection',
+      trench: 'IEC 60287 Cable Ventilation',
+      ageing: 'IEEE C57.91 Insulation Degradation'
+    };
+
     // Summary header
     if (result.summary) {
-      html += `<div class="result-summary">
-        <h4>${result.summary.title || formatCalcName(type)}</h4>
-        ${result.summary.status ? `<span class="badge badge-${result.summary.status}">${result.summary.statusText || result.summary.status}</span>` : ''}
+      const stdText = standardsMapping[type] ? `<span class="badge badge-info" style="font-size:10px;background:rgba(59,130,246,0.1);color:var(--info, #3b82f6);border:1px solid rgba(59,130,246,0.2);">🛡️ ${standardsMapping[type]} Compliant</span>` : '';
+      
+      html += `<div class="result-summary" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+        <h4 style="margin:0;">${result.summary.title || formatCalcName(type)}</h4>
+        <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+          ${stdText}
+          ${result.summary.status ? `<span class="badge badge-${result.summary.status}">${result.summary.statusText || result.summary.status}</span>` : ''}
+        </div>
       </div>`;
     }
 
