@@ -251,6 +251,24 @@ window.App = (function () {
         });
       });
     });
+
+    // Dynamic visibility for Voltage Regulator inputs
+    const regTypeSelect = document.getElementById('vd-reg-type');
+    const tfGroup = document.getElementById('vd-transformer-mva-group');
+    const connSelect = document.getElementById('vd-connection-type');
+    if (regTypeSelect) {
+      const toggleFields = () => {
+        const isLtc = regTypeSelect.value === 'ltc';
+        if (tfGroup) tfGroup.style.display = isLtc ? 'block' : 'none';
+        if (connSelect) {
+          const connGroup = connSelect.closest('.form-group');
+          if (connGroup) connGroup.style.display = isLtc ? 'none' : 'block';
+        }
+      };
+      regTypeSelect.addEventListener('change', toggleFields);
+      // Run once
+      toggleFields();
+    }
   }
 
   function populateDefaults() {
@@ -809,13 +827,20 @@ window.App = (function () {
 
   function runInsulationCalc() {
     return SubstationCalc.insulationCoordination({
-      systemVoltage: 13.2,
-      bil: 110,
-      arresterRating: 10.2,
-      mcov: 8.4,
-      dischargeCurrent: 10,
-      frontOfWave: 33,
-      altitude: 100,
+      systemVoltage: getInputNum('ins-voltage') || 13.2,
+      arresterMCOV: getInputNum('ins-mcov') || 8.4,
+      arresterDischargeVoltage: getInputNum('ins-discharge') || 32,
+      arresterFOW: getInputNum('ins-fow') || 41,
+      arresterSSPL: getInputNum('ins-sspl') || 27,
+      altitude: getInputNum('ins-altitude') || 1000,
+      leadLength: getInputNum('ins-lead-length') || 1.5,
+      didt: getInputNum('ins-didt') || 10,
+      equipment: [
+        { name: 'HV Circuit Breaker', bil: getInputNum('ins-hv-breaker-bil') || 110 },
+        { name: 'Transformer HV Winding', bil: getInputNum('ins-tf-hv-bil') || 110, bsl: getInputNum('ins-tf-hv-bsl') || 83 },
+        { name: 'Transformer LV Winding', bil: getInputNum('ins-tf-lv-bil') || 30 },
+        { name: 'LV Circuit Breaker', bil: getInputNum('ins-lv-breaker-bil') || 30 }
+      ]
     });
   }
 
@@ -910,6 +935,15 @@ window.App = (function () {
       sections: sections,
       baseVoltage: 13.2,
       powerFactor: 0.95,
+      regulatorEnabled: (document.getElementById('vd-reg-enabled') || {}).value === 'yes',
+      regulatorBusIndex: getInputNum('vd-reg-location') !== null ? getInputNum('vd-reg-location') : 3,
+      regulatorRange: Number((document.getElementById('vd-reg-range') || {}).value || 10),
+      regulatorType: (document.getElementById('vd-reg-type') || {}).value || 'ltc',
+      connectionType: (document.getElementById('vd-connection-type') || {}).value || 'wye',
+      rLine: getInputNum('vd-ldc-r') !== null ? getInputNum('vd-ldc-r') : 0.5,
+      xLine: getInputNum('vd-ldc-x') !== null ? getInputNum('vd-ldc-x') : 0.8,
+      overloadMargin: getInputNum('vd-overload-margin') !== null ? getInputNum('vd-overload-margin') : 20,
+      transformerMVA: getInputNum('vd-transformer-mva') || 10
     });
 
     if (typeof SubstationCharts !== 'undefined') {
@@ -1051,10 +1085,12 @@ window.App = (function () {
   function runMotorStartingCalc() {
     return SubstationCalc.motorStarting({
       motorHP: getInputNum('ms-motor-hp') || 1000,
-      lrcMultiplier: getInputNum('ms-lrc-multiplier') || 6.0,
-      motorEfficiency: getInputNum('ms-efficiency') || 0.95,
-      motorPowerFactor: getInputNum('ms-power-factor') || 0.2,
-      busFaultMVA: getInputNum('ms-bus-fault-mva') || 250,
+      motorKV: getInputNum('ms-motor-kv') || 4.16,
+      nemaCodeLetter: (document.getElementById('ms-nema-code') || {}).value || 'G',
+      startMethod: (document.getElementById('ms-start-method') || {}).value || 'dol',
+      sourceFaultMVA: getInputNum('ms-source-fault-mva') || 250,
+      motorFaultMVA: getInputNum('ms-motor-fault-mva') || 180,
+      accelerationTime: getInputNum('ms-accel-time') || 10
     });
   }
 
@@ -1122,8 +1158,15 @@ window.App = (function () {
 
   function runCapovervoltageCalc() {
     return SubstationCalc.capacitorOvervoltage({
-      bankKVAR: getInputNum('co-bank'),
-      sourceFaultMVA: getInputNum('co-fault')
+      bankKVAR: getInputNum('co-bank') || 1200,
+      sourceFaultMVA: getInputNum('co-fault') || 250,
+      systemVoltage: getInputNum('co-sys-voltage') || 13.8,
+      systemFrequency: getInputNum('co-frequency') || 60,
+      numBanks: getInputNum('co-num-banks') || 1,
+      busInductance: getInputNum('co-bus-inductance') || 50,
+      seriesReactor: getInputNum('co-series-reactor') || 0,
+      dischargeVoltage: getInputNum('co-discharge-volt') || 50,
+      dischargeTime: getInputNum('co-discharge-time') || 300
     });
   }
 
@@ -1169,9 +1212,19 @@ window.App = (function () {
 
   function runArresterCalc() {
     return SubstationCalc.surgeArresterEnergy({
-      dischargeCurrent: getInputNum('sa-current'),
-      dischargeVoltage: getInputNum('sa-voltage'),
-      surgeDuration: getInputNum('sa-duration')
+      systemVoltage: getInputNum('sa-sys-voltage') || 13.8,
+      maxSystemVoltage: getInputNum('sa-max-voltage') || 15.0,
+      groundingType: (document.getElementById('sa-grounding') || {}).value || 'effectively_grounded',
+      transformerConfig: (document.getElementById('sa-tf-config') || {}).value || 'wye_g',
+      tovFactor: getInputNum('sa-tov-factor') || 1.4,
+      tovDuration: getInputNum('sa-tov-duration') || 1.0,
+      tov10Factor: getInputNum('sa-tov10-factor') || 1.25,
+      surgeRateOfRise: getInputNum('sa-surge-ror') || 1000,
+      separationDistance: getInputNum('sa-sep-dist') || 5.0,
+      dischargeCurrent: getInputNum('sa-current') || 10,
+      dischargeVoltage: getInputNum('sa-voltage') || 150,
+      surgeDuration: getInputNum('sa-duration') || 2000,
+      transientType: (document.getElementById('sa-transient-type') || {}).value || 'lightning'
     });
   }
 
@@ -1274,14 +1327,25 @@ window.App = (function () {
     // Data table
     if (result.table) {
       html += '<div class="result-table-wrap"><table class="result-table"><thead><tr>';
-      result.table.headers.forEach(h => {
-        html += `<th>${h}</th>`;
+      
+      const numericColumns = {};
+      if (result.table.rows && result.table.rows.length > 0) {
+        result.table.rows[0].forEach((cell, ci) => {
+          if (typeof cell === 'number' || (cell != null && !isNaN(parseFloat(cell)) && isFinite(cell))) {
+            numericColumns[ci] = true;
+          }
+        });
+      }
+
+      result.table.headers.forEach((h, hi) => {
+        const cls = numericColumns[hi] ? 'num' : '';
+        html += `<th class="${cls}">${h}</th>`;
       });
       html += '</tr></thead><tbody>';
       result.table.rows.forEach(row => {
         html += '<tr>';
         row.forEach((cell, ci) => {
-          const cls = typeof cell === 'number' ? 'num' : '';
+          const cls = numericColumns[ci] ? 'num' : '';
           html += `<td class="${cls}">${cell}</td>`;
         });
         html += '</tr>';
@@ -1302,6 +1366,107 @@ window.App = (function () {
         </div>`;
       });
       html += '</div>';
+    }
+
+    // Coordination table (insulation coordination)
+    if (result.coordinationTable && result.coordinationTable.length > 0) {
+      html += '<div class="result-table-wrap"><h4 class="steps-title"><span class="steps-icon">🛡️</span> Insulation Coordination Assessment</h4>';
+      html += '<table class="result-table"><thead><tr>';
+      html += '<th>Equipment</th><th>BIL (kV)</th><th>BSL (kV)</th><th>PR (kV)</th><th>PM (%)</th><th>Status</th>';
+      html += '</tr></thead><tbody>';
+      result.coordinationTable.forEach(eq => {
+        const passClass = eq.pass ? 'pass' : 'fail';
+        const icon = eq.pass ? '✅' : '❌';
+        html += `<tr class="coordination-${passClass}">
+          <td>${eq.name || ''}</td>
+          <td class="num">${eq.bil != null ? eq.bil : '—'}</td>
+          <td class="num">${eq.bsl != null ? eq.bsl : '—'}</td>
+          <td class="num">${eq.protectiveRatio != null ? eq.protectiveRatio : '—'}</td>
+          <td class="num">${eq.protectiveMargin != null ? eq.protectiveMargin : '—'}</td>
+          <td><span class="compliance-icon">${icon}</span> ${eq.pass ? 'Adequate' : 'Inadequate'}</td>
+        </tr>`;
+      });
+      html += '</tbody></table></div>';
+    }
+
+    // Breaker sizing card (capacitor overvoltage)
+    if (result.breakerSizing) {
+      const bs = result.breakerSizing;
+      html += `<div class="result-card breaker-sizing-card" style="margin-top:1rem;padding:1.25rem;border-left:4px solid var(--accent, #4fc3f7);background:var(--surface-alt, rgba(79,195,247,0.06));border-radius:8px;">
+        <h4 style="margin:0 0 0.75rem;display:flex;align-items:center;gap:0.5rem;"><span>⚡</span> Capacitor Breaker Sizing</h4>
+        <div class="result-cards" style="gap:0.75rem;">
+          ${bs.breakerClass ? `<div class="result-card"><div class="result-card-label">Breaker Class</div><div class="result-card-value">${bs.breakerClass}</div></div>` : ''}
+          ${bs.makingCurrent != null ? `<div class="result-card"><div class="result-card-label">Making Current</div><div class="result-card-value">${bs.makingCurrent}</div><div class="result-card-unit">kA peak</div></div>` : ''}
+          ${bs.frequency != null ? `<div class="result-card"><div class="result-card-label">Inrush Frequency</div><div class="result-card-value">${bs.frequency}</div><div class="result-card-unit">Hz</div></div>` : ''}
+          ${bs.interrupting != null ? `<div class="result-card"><div class="result-card-label">Interrupting Rating</div><div class="result-card-value">${bs.interrupting}</div><div class="result-card-unit">kA rms</div></div>` : ''}
+        </div>
+      </div>`;
+    }
+
+    // Voltage regulator sizing card
+    if (result.regulator) {
+      const reg = result.regulator;
+      html += `<div class="result-card regulator-card" style="margin-top:1.5rem;padding:1.5rem;border-left:4px solid var(--success, #66bb6a);background:var(--surface-alt, rgba(102,187,106,0.06));border-radius:12px;">
+        <h4 style="margin:0 0 0.5rem;display:flex;align-items:center;gap:0.5rem;font-size:1.15rem;color:var(--text, #ffffff);">
+          <span>🔄</span> Voltage Regulator & LTC Design Assessment
+        </h4>
+        <p style="margin:0 0 1rem;font-size:0.875rem;color:var(--text-muted, #b0bec5);line-height:1.4;">
+          <strong>Device Class:</strong> ${reg.typeLabel}<br>
+          <em>${reg.description}</em>
+        </p>
+        
+        <div class="result-cards" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:0.75rem;margin-bottom:1.25rem;">
+          <div class="result-card" style="padding:0.75rem;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">
+            <div class="result-card-label" style="font-size:0.75rem;color:var(--text-muted);">Location Node</div>
+            <div class="result-card-value" style="font-size:1.1rem;font-weight:600;">${reg.location}</div>
+          </div>
+          <div class="result-card" style="padding:0.75rem;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">
+            <div class="result-card-label" style="font-size:0.75rem;color:var(--text-muted);">Regulation Range</div>
+            <div class="result-card-value" style="font-size:1.1rem;font-weight:600;">±${reg.range}%</div>
+          </div>
+          <div class="result-card" style="padding:0.75rem;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">
+            <div class="result-card-label" style="font-size:0.75rem;color:var(--text-muted);">Tap Position</div>
+            <div class="result-card-value" style="font-size:1.1rem;font-weight:600;color:var(--accent);">${reg.tapPosition}</div>
+          </div>
+          <div class="result-card" style="padding:0.75rem;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);">
+            <div class="result-card-label" style="font-size:0.75rem;color:var(--text-muted);">Required Bank Rating</div>
+            <div class="result-card-value" style="font-size:1.1rem;font-weight:600;color:var(--success);">${reg.kvaRating} kVA</div>
+          </div>
+        </div>
+
+        <div style="background:rgba(0,0,0,0.15);padding:1rem;border-radius:8px;margin-bottom:1.25rem;border:1px solid rgba(255,255,255,0.05);">
+          <h5 style="margin:0 0 0.75rem;font-size:0.9rem;display:flex;align-items:center;gap:0.35rem;color:var(--text);">
+            <span>📈</span> Add-Amp (Load-Bonus) Capability & Limits (IEEE C57.15)
+          </h5>
+          <div style="display:flex;flex-wrap:wrap;gap:1.5rem;font-size:0.875rem;">
+            <div><span style="color:var(--text-muted);">Actual Max Load:</span> <strong>${reg.actualCurrent} A</strong></div>
+            <div><span style="color:var(--text-muted);">Load-Bonus Factor:</span> <strong style="color:var(--accent);">${reg.loadBonusMultiplier}x</strong></div>
+            <div><span style="color:var(--text-muted);">Allowable Cont. Current:</span> <strong style="color:var(--success);">${reg.allowableCurrent} A</strong></div>
+          </div>
+          <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--text-muted);">
+            *By restricting tap range, allowable continuous current can safely exceed 100% of nominal rating without exceeding safe temperature rise parameters.
+          </div>
+        </div>
+
+        <div style="background:rgba(0,0,0,0.15);padding:1rem;border-radius:8px;border:1px solid rgba(255,255,255,0.05);">
+          <h5 style="margin:0 0 0.75rem;font-size:0.9rem;display:flex;align-items:center;gap:0.35rem;color:var(--text);">
+            <span>🎛️</span> Line Drop Compensator (LDC) Setting Optimization
+          </h5>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem;font-size:0.875rem;">
+            <div>
+              <span style="color:var(--text-muted);">CT Sizing:</span> <strong>${reg.ctRatio} A</strong><br>
+              <span style="color:var(--text-muted);">PT Sizing:</span> <strong style="font-size:0.8rem;">${reg.ptRatio}</strong>
+            </div>
+            <div>
+              <span style="color:var(--text-muted);">Dial R Setting:</span> <strong style="color:var(--accent); font-size:1.05rem;">${reg.rSet} V</strong><br>
+              <span style="color:var(--text-muted);">Dial X Setting:</span> <strong style="color:var(--accent); font-size:1.05rem;">${reg.xSet} V</strong>
+            </div>
+          </div>
+          <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--text-muted);">
+            *Line Drop Compensator settings simulate feeder voltage drop to maintain exactly 120V nominal voltage at the distant regulating point.
+          </div>
+        </div>
+      </div>`;
     }
 
     container.innerHTML = html;
@@ -1558,6 +1723,38 @@ window.App = (function () {
     };
   }
 
+  // ---- Module Search ----
+  function searchModules() {
+    const input = document.getElementById('module-search-input');
+    const query = input ? input.value.toLowerCase().trim() : '';
+    const clearBtn = document.getElementById('clear-search-btn');
+    
+    if (clearBtn) {
+      clearBtn.style.display = query ? 'inline-block' : 'none';
+    }
+
+    document.querySelectorAll('.nav-section').forEach(section => {
+      let sectionHasVisibleLink = false;
+      section.querySelectorAll('.nav-link').forEach(link => {
+        const text = link.textContent.toLowerCase();
+        const matches = text.includes(query);
+        link.style.display = matches ? 'flex' : 'none';
+        if (matches) {
+          sectionHasVisibleLink = true;
+        }
+      });
+      section.style.display = sectionHasVisibleLink ? 'block' : 'none';
+    });
+  }
+
+  function clearSearch() {
+    const input = document.getElementById('module-search-input');
+    if (input) {
+      input.value = '';
+    }
+    searchModules();
+  }
+
   // ---- Public API ----
   return {
     init,
@@ -1567,6 +1764,8 @@ window.App = (function () {
     exportResults,
     saveProjectData,
     showToast,
+    searchModules,
+    clearSearch,
     DEFAULTS,
   };
 })();

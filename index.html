@@ -21,12 +21,18 @@
 <!-- ============ SIDEBAR ============ -->
 <aside class="sidebar">
   <div class="sidebar-header">
-    <div class="logo">
+    <div class="logo" style="margin-bottom: 12px;">
       <div class="logo-icon">⚡</div>
       <div class="logo-text">
         <span class="logo-title">SubStation</span>
         <span class="logo-subtitle">Designer Pro</span>
       </div>
+    </div>
+    <!-- Search Bar -->
+    <div class="sidebar-search-wrap" style="display: flex; gap: 8px; align-items: center; background: var(--bg-secondary, #f5f7fa); border-radius: 6px; padding: 8px 12px; margin: 0 10px 12px 10px; border: 1px solid var(--border, #e2e8f0);">
+      <span style="font-size: 14px; color: var(--text-muted, #8892a4); pointer-events: none;">🔍</span>
+      <input type="text" id="module-search-input" placeholder="Search modules..." style="background: transparent; border: none; color: var(--text-primary, #1a1a2e); font-size: 13px; outline: none; width: 100%;" onkeyup="App.searchModules()">
+      <button onclick="App.clearSearch()" id="clear-search-btn" style="background: transparent; border: none; color: var(--text-muted, #a0a0a0); font-size: 12px; cursor: pointer; display: none; padding: 0;">❌</button>
     </div>
   </div>
 
@@ -367,6 +373,69 @@
             </tbody>
           </table>
         </div>
+        <h3 class="card-subtitle">Voltage Regulator & Load Tap Changer (LTC) Sizing</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="vd-reg-enabled">Enable Voltage Regulator / LTC</label>
+            <select id="vd-reg-enabled">
+              <option value="no">No</option>
+              <option value="yes" selected>Yes</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="vd-reg-type">Regulator Device Type</label>
+            <select id="vd-reg-type">
+              <option value="ltc" selected>Integrated Substation LTC</option>
+              <option value="standalone">Standalone Step-Voltage Regulator Bank</option>
+            </select>
+          </div>
+          <div class="form-group" id="vd-transformer-mva-group">
+            <label for="vd-transformer-mva">Substation Transformer Size (MVA)</label>
+            <input type="number" id="vd-transformer-mva" value="10" step="1" min="1" max="100">
+          </div>
+          <div class="form-group">
+            <label for="vd-connection-type">Electrical Connection</label>
+            <select id="vd-connection-type">
+              <option value="wye" selected>Grounded-Wye (3 Units)</option>
+              <option value="open-delta">Open-Delta (2 Units)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="vd-reg-location">Regulator Location (Bus Index)</label>
+            <input type="number" id="vd-reg-location" value="3" step="1" min="0" max="9">
+          </div>
+          <div class="form-group">
+            <label for="vd-reg-range">Regulation Range (±%)</label>
+            <select id="vd-reg-range">
+              <option value="10" selected>±10.0% (100% Ampacity)</option>
+              <option value="8.75">±8.75% (110% Ampacity)</option>
+              <option value="7.5">±7.5% (120% Ampacity)</option>
+              <option value="6.25">±6.25% (135% Ampacity)</option>
+              <option value="5">±5.0% (160% Ampacity)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="vd-overload-margin">Overload Safety Margin (%)</label>
+            <input type="number" id="vd-overload-margin" value="20" step="5" min="0" max="100">
+          </div>
+          <div class="form-group">
+            <label for="vd-ldc-r">LDC Target Line Resistance R (Ω)</label>
+            <input type="number" id="vd-ldc-r" value="0.5" step="0.1" min="0" max="10">
+          </div>
+          <div class="form-group">
+            <label for="vd-ldc-x">LDC Target Line Reactance X (Ω)</label>
+            <input type="number" id="vd-ldc-x" value="0.8" step="0.1" min="0" max="10">
+          </div>
+        </div>
+
+        <!-- Co-op / RUS Educational Callout -->
+        <div class="coop-info-card" style="margin: 1.5rem 0; padding: 1rem; border-radius: 8px; border-left: 4px solid var(--accent, #4fc3f7); background: var(--surface-alt, rgba(79, 195, 247, 0.05));">
+          <h5 style="margin:0 0 0.5rem; display:flex; align-items:center; gap:0.5rem;"><span style="font-size:1.2rem;">🏢</span> Electric Coop Standard Compliance (RUS 1724D-101B)</h5>
+          <p style="margin:0; font-size:0.875rem; color:var(--text-muted); line-height:1.4;">
+            <strong>LTC Mandate:</strong> Substation power transformers in Electric Cooperatives (Coops) funded by the USDA Rural Utilities Service (RUS) are typically equipped with Load Tap Changers (LTCs) to dynamically adjust voltage under load. If feeders are highly asymmetric, standalone step-voltage regulators (per IEEE C57.15) connected in Wye or Open Delta are placed either on the bus or at line load-centers.
+          </p>
+        </div>
+
         <button class="btn btn-primary" data-calc="voltagedrop">📉 Calculate Voltage Drop</button>
 
         <div class="chart-card" style="margin-top:24px">
@@ -644,25 +713,65 @@
     <section id="module-insulation" class="module-section">
       <div class="module-header">
         <h2>Insulation Coordination</h2>
-        <p class="module-desc">BIL Selection, Surge Arrester Sizing & Protection Margin</p>
+        <p class="module-desc">IEEE C62.22 Protective Ratio & Margin Analysis for Substation Equipment</p>
       </div>
       <div class="card">
+        <h3 class="card-subtitle">Surge Arrester Characteristics</h3>
         <div class="form-grid">
           <div class="form-group">
-            <label for="ins-voltage">System Voltage (kV)</label>
+            <label for="ins-voltage">System Voltage (kV LL)</label>
             <input type="number" id="ins-voltage" value="13.2" step="0.1">
           </div>
           <div class="form-group">
-            <label for="ins-bil">Equipment BIL (kV)</label>
-            <input type="number" id="ins-bil" value="110" step="5">
+            <label for="ins-mcov">Arrester MCOV (kV)</label>
+            <input type="number" id="ins-mcov" value="8.4" step="0.1">
           </div>
           <div class="form-group">
-            <label for="ins-arrester">Arrester Rating (kV)</label>
-            <input type="number" id="ins-arrester" value="10.2" step="0.1">
+            <label for="ins-discharge">Arrester 10kA Discharge Voltage (kV)</label>
+            <input type="number" id="ins-discharge" value="32" step="1">
           </div>
           <div class="form-group">
-            <label for="ins-altitude">Altitude (m above sea level)</label>
-            <input type="number" id="ins-altitude" value="100" step="50">
+            <label for="ins-fow">Front-of-Wave Protective Level (kV)</label>
+            <input type="number" id="ins-fow" value="41" step="1">
+          </div>
+          <div class="form-group">
+            <label for="ins-sspl">Switching Surge Protective Level (kV)</label>
+            <input type="number" id="ins-sspl" value="27" step="1">
+          </div>
+          <div class="form-group">
+            <label for="ins-altitude">Substation Altitude (meters)</label>
+            <input type="number" id="ins-altitude" value="1200" step="100">
+          </div>
+          <div class="form-group">
+            <label for="ins-lead-length">Arrester Lead/Connection Length (m)</label>
+            <input type="number" id="ins-lead-length" value="1.5" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="ins-didt">Surge Rate of Rise di/dt (kA/μs)</label>
+            <input type="number" id="ins-didt" value="10" step="1">
+          </div>
+        </div>
+        <h3 class="card-subtitle">Equipment to Protect</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="ins-hv-breaker-bil">HV Circuit Breaker BIL (kV)</label>
+            <input type="number" id="ins-hv-breaker-bil" value="110" step="5">
+          </div>
+          <div class="form-group">
+            <label for="ins-tf-hv-bil">Transformer HV Winding BIL (kV)</label>
+            <input type="number" id="ins-tf-hv-bil" value="110" step="5">
+          </div>
+          <div class="form-group">
+            <label for="ins-tf-hv-bsl">Transformer HV Winding BSL (kV)</label>
+            <input type="number" id="ins-tf-hv-bsl" value="83" step="1">
+          </div>
+          <div class="form-group">
+            <label for="ins-tf-lv-bil">Transformer LV Winding BIL (kV)</label>
+            <input type="number" id="ins-tf-lv-bil" value="30" step="5">
+          </div>
+          <div class="form-group">
+            <label for="ins-lv-breaker-bil">LV Circuit Breaker BIL (kV)</label>
+            <input type="number" id="ins-lv-breaker-bil" value="30" step="5">
           </div>
         </div>
         <button class="btn btn-primary" data-calc="insulation">🧱 Calculate Insulation Coordination</button>
@@ -866,29 +975,62 @@
     <section id="module-motorstarting" class="module-section">
       <div class="module-header">
         <h2>Motor Starting Analysis</h2>
-        <p class="module-desc">IEEE 399 Motor Starting Transient Voltage Drop</p>
+        <p class="module-desc">IEEE 399 / NEMA MG-1 Motor Starting Voltage Dip & Sag Analysis</p>
       </div>
       <div class="card">
         <div class="form-grid">
           <div class="form-group">
-            <label for="ms-motor-hp">Motor HP</label>
+            <label for="ms-motor-hp">Motor Rating (HP)</label>
             <input type="number" id="ms-motor-hp" value="1000" step="50">
           </div>
           <div class="form-group">
-            <label for="ms-lrc-multiplier">LRC Multiplier</label>
-            <input type="number" id="ms-lrc-multiplier" value="6.0" step="0.5">
+            <label for="ms-motor-kv">Motor Voltage (kV)</label>
+            <input type="number" id="ms-motor-kv" value="4.16" step="0.01">
           </div>
           <div class="form-group">
-            <label for="ms-efficiency">Efficiency</label>
-            <input type="number" id="ms-efficiency" value="0.95" step="0.01" min="0.5" max="1.0">
+            <label for="ms-nema-code">NEMA Code Letter</label>
+            <select id="ms-nema-code">
+              <option value="A">A (0 – 3.15 kVA/HP)</option>
+              <option value="B">B (3.15 – 3.55 kVA/HP)</option>
+              <option value="C">C (3.55 – 4.0 kVA/HP)</option>
+              <option value="D">D (4.0 – 4.5 kVA/HP)</option>
+              <option value="E">E (4.5 – 5.0 kVA/HP)</option>
+              <option value="F">F (5.0 – 5.6 kVA/HP)</option>
+              <option value="G" selected>G (5.6 – 6.3 kVA/HP)</option>
+              <option value="H">H (6.3 – 7.1 kVA/HP)</option>
+              <option value="J">J (7.1 – 8.0 kVA/HP)</option>
+              <option value="K">K (8.0 – 9.0 kVA/HP)</option>
+              <option value="L">L (9.0 – 10.0 kVA/HP)</option>
+              <option value="M">M (10.0 – 11.2 kVA/HP)</option>
+              <option value="N">N (11.2 – 12.5 kVA/HP)</option>
+              <option value="P">P (12.5 – 14.0 kVA/HP)</option>
+              <option value="R">R (14.0 – 16.0 kVA/HP)</option>
+              <option value="S">S (16.0 – 18.0 kVA/HP)</option>
+              <option value="T">T (18.0 – 20.0 kVA/HP)</option>
+              <option value="U">U (20.0 – 22.4 kVA/HP)</option>
+              <option value="V">V (22.4+ kVA/HP)</option>
+            </select>
           </div>
           <div class="form-group">
-            <label for="ms-power-factor">Power Factor</label>
-            <input type="number" id="ms-power-factor" value="0.2" step="0.05" min="0.0" max="1.0">
+            <label for="ms-start-method">Motor Starting Method</label>
+            <select id="ms-start-method">
+              <option value="dol" selected>DOL (Direct-On-Line - 100% Voltage)</option>
+              <option value="autotrafo_80">Autotransformer Tap (80% Voltage)</option>
+              <option value="star_delta">Star-Delta (Wye-Delta Starter)</option>
+              <option value="soft_start">Soft Starter / VFD Current Limit</option>
+            </select>
           </div>
           <div class="form-group">
-            <label for="ms-bus-fault-mva">Bus Short Circuit Capacity MVA</label>
-            <input type="number" id="ms-bus-fault-mva" value="250" step="10">
+            <label for="ms-source-fault-mva">Short-Circuit MVA (Transformer LV Side)</label>
+            <input type="number" id="ms-source-fault-mva" value="250" step="10">
+          </div>
+          <div class="form-group">
+            <label for="ms-motor-fault-mva">Short-Circuit MVA (Motor Connection Point)</label>
+            <input type="number" id="ms-motor-fault-mva" value="180" step="10">
+          </div>
+          <div class="form-group">
+            <label for="ms-accel-time">Motor Acceleration Time (seconds)</label>
+            <input type="number" id="ms-accel-time" value="10" step="1" min="1">
           </div>
         </div>
         <button class="btn btn-primary" data-calc="motorstarting">🏍️ Run Motor Starting Analysis</button>
@@ -1100,11 +1242,20 @@
     <!-- =========== MODULE: CAPACITOR OVERVOLTAGE =========== -->
     <section id="module-capovervoltage" class="module-section">
       <div class="module-header">
-        <h2>Capacitor Overvoltage</h2>
-        <p class="module-desc">IEEE C37.99 Shunt Capacitor Switching Overvoltage Analysis</p>
+        <h2>Capacitor Overvoltage & Inrush</h2>
+        <p class="module-desc">IEEE C37.012/C37.99 Switching Overvoltage, Inrush Current & Breaker Sizing</p>
       </div>
       <div class="card">
+        <h3 class="card-subtitle">System & Bank Parameters</h3>
         <div class="form-grid">
+          <div class="form-group">
+            <label for="co-sys-voltage">System Voltage (kV LL)</label>
+            <input type="number" id="co-sys-voltage" value="13.8" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="co-frequency">System Frequency (Hz)</label>
+            <input type="number" id="co-frequency" value="60" step="10">
+          </div>
           <div class="form-group">
             <label for="co-bank">Capacitor Bank Size (kVAR)</label>
             <input type="number" id="co-bank" value="1200" step="100">
@@ -1113,8 +1264,28 @@
             <label for="co-fault">Source Short Circuit Level (MVA)</label>
             <input type="number" id="co-fault" value="250" step="10">
           </div>
+          <div class="form-group">
+            <label for="co-num-banks">Number of Banks</label>
+            <input type="number" id="co-num-banks" value="1" step="1" min="1" max="6">
+          </div>
+          <div class="form-group">
+            <label for="co-bus-inductance">Bus Inductance Between Banks (μH)</label>
+            <input type="number" id="co-bus-inductance" value="50" step="5" min="1">
+          </div>
+          <div class="form-group">
+            <label for="co-series-reactor">Series Inrush Limiting Reactor (μH)</label>
+            <input type="number" id="co-series-reactor" value="150" step="10" min="0">
+          </div>
+          <div class="form-group">
+            <label for="co-discharge-volt">Safe Discharge Target Voltage (V)</label>
+            <input type="number" id="co-discharge-volt" value="50" step="5" min="5">
+          </div>
+          <div class="form-group">
+            <label for="co-discharge-time">Required Discharge Time Limit (s)</label>
+            <input type="number" id="co-discharge-time" value="300" step="10" min="30">
+          </div>
         </div>
-        <button class="btn btn-primary" data-calc="capovervoltage">⚡ Calculate Capacitor Overvoltage</button>
+        <button class="btn btn-primary" data-calc="capovervoltage">⚡ Calculate Capacitor Overvoltage & Inrush</button>
         <div id="result-capovervoltage" class="result-area"></div>
       </div>
     </section>
@@ -1252,10 +1423,57 @@
     <!-- =========== MODULE: SURGE ARRESTER ENERGY =========== -->
     <section id="module-arrester" class="module-section">
       <div class="module-header">
-        <h2>Surge Arrester Energy</h2>
-        <p class="module-desc">IEEE C62.22 Surge Arrester Energy Sizing</p>
+        <h2>Surge Arrester Sizing & Energy</h2>
+        <p class="module-desc">IEEE C62.22 Arrester MCOV, Duty Cycle Rating & Energy Absorption</p>
       </div>
       <div class="card">
+        <h3 class="card-subtitle">System Parameters</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="sa-sys-voltage">Nominal System Voltage (kV LL)</label>
+            <input type="number" id="sa-sys-voltage" value="13.8" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="sa-max-voltage">Maximum System Voltage (kV LL)</label>
+            <input type="number" id="sa-max-voltage" value="15.0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="sa-grounding">System Grounding Type</label>
+            <select id="sa-grounding">
+              <option value="effectively_grounded" selected>Effectively Grounded</option>
+              <option value="impedance_grounded">Impedance Grounded</option>
+              <option value="ungrounded">Ungrounded</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="sa-tf-config">Transformer Configuration</label>
+            <select id="sa-tf-config">
+              <option value="wye_g" selected>Wye-Grounded (Solid Ground)</option>
+              <option value="delta">Delta / Ungrounded</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="sa-tov-factor">TOV Factor (pu)</label>
+            <input type="number" id="sa-tov-factor" value="1.4" step="0.05" min="1.0" max="2.0">
+          </div>
+          <div class="form-group">
+            <label for="sa-tov-duration">TOV Duration (seconds)</label>
+            <input type="number" id="sa-tov-duration" value="1.0" step="0.5" min="0.1">
+          </div>
+          <div class="form-group">
+            <label for="sa-tov10-factor">10s TOV Factor (pu)</label>
+            <input type="number" id="sa-tov10-factor" value="1.25" step="0.05" min="1.0" max="2.0">
+          </div>
+          <div class="form-group">
+            <label for="sa-surge-ror">Incoming Surge Rate of Rise (kV/μs)</label>
+            <input type="number" id="sa-surge-ror" value="1000" step="100" min="100">
+          </div>
+          <div class="form-group">
+            <label for="sa-sep-dist">Arrester-to-TF Separation Distance (m)</label>
+            <input type="number" id="sa-sep-dist" value="5.0" step="0.5" min="0.5">
+          </div>
+        </div>
+        <h3 class="card-subtitle">Surge Parameters</h3>
         <div class="form-grid">
           <div class="form-group">
             <label for="sa-current">Discharge Current (kA)</label>
@@ -1269,8 +1487,16 @@
             <label for="sa-duration">Discharge Duration (μs)</label>
             <input type="number" id="sa-duration" value="2000" step="100">
           </div>
+          <div class="form-group">
+            <label for="sa-transient-type">Transient Surge Waveform (PSCAD/ATP Emulation)</label>
+            <select id="sa-transient-type">
+              <option value="lightning" selected>Lightning Impulse (8/20 μs Standard)</option>
+              <option value="switching">Switching Surge (250/2500 μs Standard)</option>
+              <option value="tov">60Hz TOV Swell Transient</option>
+            </select>
+          </div>
         </div>
-        <button class="btn btn-primary" data-calc="arrester">⚡ Calculate Surge Arrester Energy</button>
+        <button class="btn btn-primary" data-calc="arrester">⚡ Calculate Surge Arrester Sizing</button>
         <div id="result-arrester" class="result-area"></div>
       </div>
     </section>
